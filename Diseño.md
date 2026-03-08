@@ -217,8 +217,9 @@ Al presionar "Cobrar" se abre un modal con:
   panel de configuracion.
 - **Redondeo del total:** si esta activado
   (ver seccion 11.10), el total de la venta se
-  redondea al multiplo configurado. Ej: si el multiplo
-  es 50 y el total da $2.930, se redondea a $2.950.
+  redondea hacia arriba (ceil) al multiplo configurado.
+  Ej: si el multiplo es 50 y el total da $2.930, se
+  redondea a $2.950.
   La diferencia ($20) se distribuye automaticamente
   entre los items de la venta (se ajusta el precio
   unitario de uno o mas productos para que el ticket
@@ -423,9 +424,10 @@ Campos del producto:
   (ej: "Mayorista", "Empleados").
 - **Redondeo de precio de venta:** al calcular el precio
   de venta a partir del costo (ej: costo + margen), el
-  resultado se redondea al multiplo configurado por el
-  usuario (ver seccion 11.10). Ej: si el multiplo es
-  100 y el calculo da $2.350, se redondea a $2.400.
+  resultado se redondea hacia arriba (ceil) al multiplo
+  configurado por el usuario (ver seccion 11.10). Ej:
+  si el multiplo es 100 y el calculo da $2.350, se
+  redondea a $2.400.
 - **Stock actual** (solo lectura, se modifica desde
   movimientos de stock).
 - **Stock minimo** (para alertas de stock bajo).
