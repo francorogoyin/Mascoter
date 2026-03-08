@@ -515,8 +515,26 @@ El sistema calcula automaticamente:
 - En el POS aparece como "Papel Higienico Unidad",
   sin ninguna referencia a granel.
 - Al vender, se ingresa cantidad entera (1, 2, 3...).
-- El stock del lote se descuenta proporcionalmente
-  (vender 3 unidades = descontar 3/24 de un lote).
+
+**Descuento de stock al fraccionar:**
+
+Al vender una fraccion o granel, el stock del
+paquete/lote origen se consume entero. Un lote
+abierto ya no es un lote completo:
+
+- Ej: Stock de "Lote x24" = 1, se vende 1 unidad
+  de "Papel Higienico Unidad".
+- El sistema descuenta 1 lote completo del stock
+  (queda en 0) y carga las 23 unidades restantes
+  al stock de la variante fraccionada.
+- Si ya hay stock fraccionado disponible (ej: 5
+  unidades sueltas de una apertura anterior), se
+  venden de ahi sin abrir otro lote.
+- Solo se abre un lote nuevo cuando el stock
+  fraccionado no alcanza para cubrir la venta.
+- Aplica igual para granel: vender 1 kg de Rosco
+  Suelto abre una bolsa entera y carga el resto
+  (ej: 19 kg) al stock de granel.
 
 **Variante origen para fraccionamiento:**
 
