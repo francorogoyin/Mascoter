@@ -258,31 +258,32 @@ Una venta ya cerrada se puede editar:
 
 ### 3.14 Devoluciones y cambios
 
-Accesible desde el historial de ventas o desde un boton
-"Devolucion" en el POS:
+Accesible desde un boton "Devolucion" en el POS.
+No requiere buscar la venta original.
 
 **Devolucion:**
 
-- Se busca la venta original (por numero, fecha o
-  cliente).
-- Se seleccionan los productos a devolver y la cantidad.
+- Se seleccionan los productos a devolver y la
+  cantidad (buscandolos por nombre, codigo o lector).
+- Se indica el precio al que se devuelven (por defecto
+  el precio de venta actual).
 - Se elige la resolucion:
   - **Reembolso:** se devuelve el dinero al cliente
-    (efectivo, transferencia, etc.).
+    (efectivo, transferencia, etc.). Se registra como
+    egreso en la caja.
   - **Nota de credito:** se genera un saldo a favor
     del cliente que puede usar en futuras compras.
 - El stock de los productos devueltos se reingresa
   automaticamente.
-- Queda vinculada a la venta original.
 
 **Cambio:**
 
 - El cliente trae uno o mas productos y se lleva otros.
 - Flujo:
-  1. Se selecciona la venta original y los productos
-     que el cliente devuelve.
-  2. Se agregan al carrito los productos nuevos que
-     se lleva.
+  1. Se seleccionan los productos que el cliente
+     devuelve (por nombre, codigo o lector) y la
+     cantidad.
+  2. Se agregan los productos nuevos que se lleva.
   3. Se calcula la diferencia:
      - Si los productos nuevos cuestan mas, el cliente
        paga la diferencia (se abre modal de cobro
@@ -293,8 +294,8 @@ Accesible desde el historial de ventas o desde un boton
      - Si es igual, se cierra sin cobro.
   4. Se ajusta el stock de ambos lados (ingreso de lo
      devuelto, egreso de lo nuevo).
-- Queda registrado como devolucion con tipo "cambio",
-  vinculada a la venta original.
+  5. Se registra el movimiento en la caja (cobro o
+     egreso segun corresponda).
 
 ### 3.15 Recargos por metodo de pago
 
@@ -342,7 +343,7 @@ Pestaña "Historial" dentro del panel de ventas:
 - **Acciones rapidas por venta:**
   - Ver detalle completo (modal o vista expandida).
   - Editar venta (abre el flujo de seccion 3.13).
-  - Devolucion / cambio (abre el flujo de 3.14).
+  - Devolucion / cambio (acceso directo a 3.14).
   - Reimprimir ticket / enviar PDF.
   - Anular venta (con confirmacion).
 - **Paginacion** con cantidad de resultados por pagina
@@ -1498,12 +1499,11 @@ Configuracion_Codigos
 
 Devoluciones
 ├── Id
-├── Id_Venta_Original (FK)
-├── Id_Venta_Cambio (FK, nullable, si es cambio)
 ├── Tipo (devolucion, cambio)
 ├── Resolucion (reembolso, nota_credito, cambio)
 ├── Monto_Devuelto
 ├── Monto_Diferencia (nullable, para cambios)
+├── Id_Cliente (FK, nullable)
 ├── Notas
 ├── Id_Usuario (FK)
 ├── Fecha_Creacion
@@ -1710,7 +1710,7 @@ GET    /api/ventas/{id}/ticket
 POST   /api/devoluciones
 GET    /api/devoluciones
 GET    /api/devoluciones/{id}
-POST   /api/devoluciones/cambio
+POST   /api/devoluciones/cambios
 ```
 
 ### 13.13 Notas de credito
