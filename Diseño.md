@@ -1182,6 +1182,67 @@ de pago:
   - Los saldos iniciales y finales por medio.
   - Las diferencias por medio.
 
+### 9.6 Comisiones por medio de pago
+
+Cada medio de pago puede tener una comision que
+cobra el proveedor del servicio (distinta del recargo
+al cliente). Se configura en cada medio:
+
+- **Cuentas de transferencia:** comision por
+  operacion (ej: Mercado Pago cobra 0,5% por
+  recibir transferencia).
+- **Terminales de pago:** comision por tipo de
+  tarjeta y cantidad de cuotas. Ej:
+  - Debito: 1,5%
+  - Credito 1 cuota: 3%
+  - Credito 3 cuotas: 5%
+  - Credito 6 cuotas: 8%
+- **Efectivo:** sin comision.
+- El sistema registra la comision en cada venta
+  para calcular la **ganancia neta real** (monto
+  cobrado - comision del medio - costo de los
+  productos).
+- En estadisticas se puede ver el total de
+  comisiones pagadas por periodo y por medio.
+
+### 9.7 Liquidaciones de terminales
+
+Los pagos con tarjeta no se acreditan al instante.
+El sistema trackea cuando se liquidan:
+
+**Configuracion por terminal:**
+
+- **Dias de liquidacion:** cantidad de dias habiles
+  que tarda en acreditarse, configurable por tipo
+  de operacion. Ej:
+  - Debito: 2 dias habiles.
+  - Credito 1 cuota: 10 dias habiles.
+  - Credito 3+ cuotas: 10 dias habiles (primera
+    cuota).
+- **Cuenta destino:** en que cuenta de transferencia
+  se deposita la liquidacion de esta terminal.
+
+**Seguimiento de liquidaciones:**
+
+- Por cada venta con tarjeta, el sistema genera
+  una **liquidacion pendiente** con:
+  - Monto cobrado.
+  - Comision estimada.
+  - Monto neto esperado.
+  - Fecha estimada de acreditacion.
+  - Estado: pendiente, acreditada, con diferencia.
+- **Vista de liquidaciones pendientes:** lista de
+  todos los pagos pendientes de acreditar, con
+  filtro por terminal, fecha estimada y estado.
+- **Conciliacion:** cuando llega el deposito a la
+  cuenta, el usuario puede marcar liquidaciones
+  como acreditadas. Si el monto real difiere del
+  esperado, se registra la diferencia.
+- **Conciliacion automatica (opcional):** si el
+  usuario ingresa el monto del deposito recibido,
+  el sistema intenta matchear con las liquidaciones
+  pendientes de esa terminal para esa fecha.
+
 ---
 
 ## 10. Panel de estadisticas
@@ -1361,7 +1422,35 @@ productos quimicos:
 - Al agregar o modificar una version, se recalculan
   los costos de todos los quimicos que la usen.
 
-### 11.12 Reglas de facturacion (fase posterior)
+### 11.12 Comisiones por medio de pago
+
+Configuracion de la comision que cobra el proveedor
+del servicio de pago (no es el recargo al cliente):
+
+- **Cuentas de transferencia:** porcentaje de comision
+  por operacion recibida. Se configura por cuenta.
+  Ej: "MP Patricio" cobra 0,5%.
+- **Terminales de pago:** comision por tipo de
+  operacion y cuotas. Se configura por terminal.
+  Ej: Terminal 1 → debito 1,5%, credito 1 cuota
+  3%, credito 3 cuotas 5%, credito 6 cuotas 8%.
+- Al registrar una venta, el sistema calcula la
+  comision automaticamente y la registra.
+
+### 11.13 Liquidaciones de terminales
+
+Configuracion de plazos de acreditacion por terminal:
+
+- Por cada terminal y tipo de operacion se configura:
+  - **Dias habiles de liquidacion** (ej: debito 2
+    dias, credito 10 dias).
+  - **Cuenta destino** donde se deposita la
+    liquidacion (FK a Cuentas_Transferencia).
+- El sistema usa esta configuracion para calcular
+  la fecha estimada de acreditacion de cada venta
+  con tarjeta.
+
+### 11.14 Reglas de facturacion (fase posterior)
 
 - Configurar que metodos de pago generan factura AFIP
   automaticamente.
@@ -1746,6 +1835,54 @@ Movimientos_Caja
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
+Comisiones_Medio_Pago
+├── Id
+├── Tipo_Medio (cuenta_transferencia, terminal)
+├── Id_Medio (FK segun Tipo_Medio)
+├── Tipo_Operacion (nullable, ej: debito, credito_1,
+│   credito_3, credito_6)
+├── Porcentaje_Comision
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Comisiones_Venta
+├── Id
+├── Id_Venta (FK)
+├── Id_Pago_Venta (FK)
+├── Monto_Cobrado
+├── Porcentaje_Comision
+├── Monto_Comision
+├── Monto_Neto
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Liquidaciones
+├── Id
+├── Id_Terminal (FK)
+├── Id_Venta (FK)
+├── Id_Pago_Venta (FK)
+├── Monto_Cobrado
+├── Comision_Estimada
+├── Monto_Neto_Esperado
+├── Monto_Neto_Real (nullable)
+├── Diferencia (nullable)
+├── Fecha_Estimada_Acreditacion
+├── Fecha_Real_Acreditacion (nullable)
+├── Id_Cuenta_Destino (FK a Cuentas_Transferencia)
+├── Estado (pendiente, acreditada, con_diferencia)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Configuracion_Liquidacion
+├── Id
+├── Id_Terminal (FK)
+├── Tipo_Operacion (debito, credito_1, credito_3,
+│   credito_6)
+├── Dias_Habiles_Liquidacion
+├── Id_Cuenta_Destino (FK a Cuentas_Transferencia)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
 Configuracion_Negocio
 ├── Id
 ├── Nombre_Negocio
@@ -2091,9 +2228,27 @@ GET    /api/caja/actual
 POST   /api/caja/movimiento
 GET    /api/caja/historial
 GET    /api/caja/{id}
+GET    /api/caja/{id}/saldos
 ```
 
-### 13.22 Estadisticas
+### 13.22 Liquidaciones
+
+```
+GET    /api/liquidaciones
+GET    /api/liquidaciones/pendientes
+POST   /api/liquidaciones/conciliar
+GET    /api/liquidaciones/terminal/{id}
+```
+
+### 13.23 Comisiones
+
+```
+GET    /api/comisiones
+GET    /api/comisiones/por-periodo
+GET    /api/comisiones/por-medio
+```
+
+### 13.24 Estadisticas
 
 ```
 GET    /api/estadisticas/ventas
@@ -2108,7 +2263,7 @@ GET    /api/estadisticas/alertas
 GET    /api/estadisticas/exportar
 ```
 
-### 13.23 Configuracion
+### 13.25 Configuracion
 
 ```
 GET    /api/configuracion/negocio
@@ -2133,16 +2288,20 @@ GET    /api/configuracion/versiones-envase
 POST   /api/configuracion/versiones-envase
 PUT    /api/configuracion/versiones-envase/{id}
 DELETE /api/configuracion/versiones-envase/{id}
+GET    /api/configuracion/comisiones/{tipo_medio}/{id}
+PUT    /api/configuracion/comisiones/{tipo_medio}/{id}
+GET    /api/configuracion/liquidacion/{id_terminal}
+PUT    /api/configuracion/liquidacion/{id_terminal}
 ```
 
-### 13.24 Historial de precios
+### 13.26 Historial de precios
 
 ```
 GET    /api/historial-precios
 GET    /api/historial-precios/producto/{id}
 ```
 
-### 13.25 Auditoria
+### 13.27 Auditoria
 
 ```
 GET    /api/auditoria
