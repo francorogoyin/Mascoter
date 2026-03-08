@@ -201,6 +201,15 @@ Al presionar "Cobrar" se abre un modal con:
 - Los metodos de pago, cuentas de transferencia, terminales
   y tipos de tarjeta son todos configurables desde el
   panel de configuracion.
+- **Redondeo del total:** si esta activado
+  (ver seccion 11.10), el total de la venta se
+  redondea al multiplo configurado. Ej: si el multiplo
+  es 50 y el total da $2.930, se redondea a $2.950.
+  La diferencia ($20) se distribuye automaticamente
+  entre los items de la venta (se ajusta el precio
+  unitario de uno o mas productos para que el ticket
+  cuadre). El vendedor puede desactivar el redondeo
+  en esa venta puntual.
 
 ### 3.11 Facturacion AFIP (fase posterior)
 
@@ -375,6 +384,11 @@ Campos del producto:
 - **Listas de precios:** por defecto una sola lista de
   precio de venta. Se pueden crear listas adicionales
   (ej: "Mayorista", "Empleados").
+- **Redondeo de precio de venta:** al calcular el precio
+  de venta a partir del costo (ej: costo + margen), el
+  resultado se redondea al multiplo configurado por el
+  usuario (ver seccion 11.10). Ej: si el multiplo es
+  100 y el calculo da $2.350, se redondea a $2.400.
 - **Stock actual** (solo lectura, se modifica desde
   movimientos de stock).
 - **Stock minimo** (para alertas de stock bajo).
@@ -865,7 +879,28 @@ Tarjetas de resumen rapido:
 - Si la caja ya esta abierta/cerrada al momento del
   horario, no se duplica la accion.
 
-### 11.10 Reglas de facturacion (fase posterior)
+### 11.10 Configuracion de redondeo
+
+- **Redondeo de precio de venta (producto):**
+  - Multiplo de redondeo para precios de venta
+    calculados a partir del costo (ej: 10, 50, 100).
+  - Se aplica al calcular precio costo + margen.
+  - Ej: multiplo 100, calculo da $2.350 → $2.400.
+  - Se puede desactivar (sin redondeo).
+- **Redondeo del total de venta:**
+  - Multiplo de redondeo para el total de la venta
+    (ej: 10, 50, 100).
+  - Ej: multiplo 50, total $2.930 → $2.950.
+  - La diferencia se reparte entre los items de la
+    venta para que el ticket cuadre. Se ajusta el
+    precio unitario del producto de mayor valor (o
+    se distribuye proporcionalmente).
+  - Activar/desactivar. El vendedor puede anularlo
+    por venta individual.
+- **Direccion del redondeo:** siempre hacia arriba
+  (ceil al multiplo mas cercano).
+
+### 11.11 Reglas de facturacion (fase posterior)
 
 - Configurar que metodos de pago generan factura AFIP
   automaticamente.
@@ -1272,6 +1307,15 @@ Configuracion_Caja
 ├── Activo (booleano, default false)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
+
+Configuracion_Redondeo
+├── Id
+├── Multiplo_Precio_Venta (nullable, ej: 100)
+├── Redondeo_Precio_Activo (booleano, default false)
+├── Multiplo_Total_Venta (nullable, ej: 50)
+├── Redondeo_Total_Activo (booleano, default false)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
 ```
 
 ---
@@ -1505,6 +1549,8 @@ POST   /api/configuracion/tipos-tarjeta
 PUT    /api/configuracion/tipos-tarjeta/{id}
 GET    /api/configuracion/caja
 PUT    /api/configuracion/caja
+GET    /api/configuracion/redondeo
+PUT    /api/configuracion/redondeo
 ```
 
 ### 13.22 Historial de precios
