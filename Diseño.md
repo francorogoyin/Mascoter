@@ -429,8 +429,8 @@ Campos del producto:
   configurado por el usuario (ver seccion 11.10). Ej:
   si el multiplo es 100 y el calculo da $2.350, se
   redondea a $2.400.
-- **Stock actual** (solo lectura, se modifica desde
-  movimientos de stock).
+- **Stock actual** (editable, aunque se modifica desde
+  Movimientos de stock).
 - **Stock minimo** (para alertas de stock bajo).
 - **Stock objetivo** (opcional, para pedidos automaticos.
   Si no se define, se usa stock minimo x2 por defecto).
@@ -657,6 +657,87 @@ productos a la vez, filtrados por:
 4. Al confirmar, se actualizan los costos y se
    recalculan los precios de venta. Se registra en
    el historial de precios y en el log de auditoria.
+
+### 5.12 Productos quimicos
+
+Los productos quimicos son liquidos que se preparan
+a partir de un concentrado diluido en agua, con una
+relacion X:1 (X partes de agua por 1 de concentrado).
+
+**Configuracion global de versiones de envase:**
+
+En Configuracion se definen las versiones de envase
+disponibles para quimicos (aplica a todo el sistema):
+
+- Cada version tiene:
+  - **Nombre** (ej: "250 cc", "500 cc", "1 lt",
+    "5 lt").
+  - **Capacidad en cc** (250, 500, 1000, 5000).
+  - **Producto insumo asociado** (el envase/botella
+    de esa capacidad, FK a Productos).
+- Se pueden agregar, editar o desactivar versiones.
+
+**Formulario de producto quimico:**
+
+Al crear un producto se puede marcar como quimico.
+Campos adicionales:
+
+- **Costo del concentrado por litro** (obligatorio).
+  Es el precio por litro del liquido puro/concentrado.
+- **Relacion de dilucion** (X:1, obligatorio).
+  Ej: 10:1 significa 10 partes agua + 1 concentrado.
+- **Versiones habilitadas:** checkboxes con las
+  versiones de envase disponibles. Se tilda cuales
+  aplican a este quimico (no todos tienen todas).
+  Ej: Quita Sarro → 500 cc, 1 lt, 5 lt.
+  Fluido → solo 1 lt.
+
+**Calculo automatico de costos:**
+
+El sistema calcula automaticamente para cada version:
+
+- **Costo del liquido por version:**
+  Concentrado_por_cc = Costo_Concentrado_Litro / 1000
+  Concentrado_necesario = Capacidad_cc / (Relacion + 1)
+  Costo_liquido = Concentrado_necesario
+                  * Concentrado_por_cc
+  Ej: Quita Sarro, concentrado $10.000/lt, relacion
+  10:1, version 1 lt (1000 cc):
+  - Concentrado necesario = 1000 / 11 = 90,9 cc
+  - Costo liquido = 90,9 * ($10.000/1000) = $909
+- **Costo total = costo liquido + costo del envase**
+  (el envase es el insumo de esa version).
+  Ej: Envase 1 lt cuesta $200.
+  Costo total = $909 + $200 = $1.109.
+- **Precio de venta:** costo total + margen de la
+  categoria (o manual), con redondeo si aplica.
+
+Cada version habilitada genera una **variante** del
+producto (igual que seccion 5.3), con su propio
+codigo, stock, precio y costo calculado.
+
+**Venta a medida (envase del cliente):**
+
+A veces el cliente trae su propio envase con un
+volumen arbitrario (ej: 4,5 litros).
+
+- En el POS, al seleccionar un producto quimico
+  aparece la opcion "Venta a medida".
+- Se ingresa la cantidad en cc o litros.
+- El sistema calcula el precio en base al costo por
+  cc del liquido diluido * volumen + margen.
+- No se suma costo de envase (lo trae el cliente).
+- El stock de concentrado se descuenta
+  proporcionalmente.
+
+**Actualizacion de costos:**
+
+- Si cambia el costo del concentrado, se recalculan
+  automaticamente los costos y precios de todas las
+  versiones de ese quimico.
+- Si cambia el costo de un envase (producto insumo),
+  se recalculan todos los quimicos que usen esa
+  version.
 
 ---
 
@@ -1120,7 +1201,20 @@ Tarjetas de resumen rapido:
 - **Direccion del redondeo:** siempre hacia arriba
   (ceil al multiplo mas cercano).
 
-### 11.11 Reglas de facturacion (fase posterior)
+### 11.11 Versiones de envase para quimicos
+
+CRUD de las versiones de envase disponibles para
+productos quimicos:
+
+- **Nombre** (ej: "250 cc", "500 cc", "1 lt", "5 lt").
+- **Capacidad en cc** (valor numerico).
+- **Producto insumo** (selector de producto existente
+  que representa el envase/botella de esa capacidad).
+- Activar/desactivar versiones.
+- Al agregar o modificar una version, se recalculan
+  los costos de todos los quimicos que la usen.
+
+### 11.12 Reglas de facturacion (fase posterior)
 
 - Configurar que metodos de pago generan factura AFIP
   automaticamente.
@@ -1205,6 +1299,9 @@ Productos
 ├── Id_Subcategoria (FK, nullable)
 ├── Id_Empresa (FK, nullable)
 ├── Id_Marca (FK, nullable)
+├── Es_Quimico (booleano, default false)
+├── Costo_Concentrado_Litro (nullable, solo quimicos)
+├── Relacion_Dilucion (nullable, el X de X:1)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -1563,6 +1660,23 @@ Configuracion_Caja
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
+Versiones_Envase_Quimico
+├── Id
+├── Nombre (ej: "250 cc", "500 cc", "1 lt")
+├── Capacidad_Cc (entero, ej: 250, 500, 1000)
+├── Id_Producto_Insumo (FK a Productos, el envase)
+├── Activo (booleano, default true)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Quimicos_Versiones_Habilitadas
+├── Id
+├── Id_Producto (FK, el producto quimico)
+├── Id_Version_Envase (FK a Versiones_Envase_Quimico)
+├── Id_Variante_Generada (FK a Productos, la variante)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
 Configuracion_Redondeo
 ├── Id
 ├── Multiplo_Precio_Venta (nullable, ej: 100)
@@ -1612,6 +1726,9 @@ GET    /api/productos/stock-bajo
 GET    /api/productos/exportar-csv
 POST   /api/productos/importar-csv
 POST   /api/productos/importar-csv/preview
+POST   /api/productos/{id}/quimico/versiones
+GET    /api/productos/{id}/quimico/costos
+POST   /api/productos/{id}/quimico/venta-medida
 ```
 
 ### 13.4 Variantes
@@ -1841,6 +1958,10 @@ GET    /api/configuracion/caja
 PUT    /api/configuracion/caja
 GET    /api/configuracion/redondeo
 PUT    /api/configuracion/redondeo
+GET    /api/configuracion/versiones-envase
+POST   /api/configuracion/versiones-envase
+PUT    /api/configuracion/versiones-envase/{id}
+DELETE /api/configuracion/versiones-envase/{id}
 ```
 
 ### 13.24 Historial de precios
