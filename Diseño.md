@@ -467,32 +467,75 @@ presentaciones del mismo articulo):
   Carne"). No tiene stock ni precio propio.
 - **Variantes:** las presentaciones concretas. Cada
   variante tiene su propio codigo, stock, precio y
-  proveedores. Ej:
-  - Rosco Carne 15kg - Codigo 1001 - $8.000
-  - Rosco Carne 20kg - Codigo 1002 - $10.000
-  - Rosco Carne Granel (x kg) - Codigo 1003
+  proveedores.
 
-**Calculo de granel por paquete:**
+**Tipos de venta:**
 
-- Si una variante es granel y otra es paquete, el
-  sistema calcula automaticamente el precio por unidad
-  fraccionada.
-  Ej: Rosco 20kg a $10.000 = $500/kg automatico.
+Cada variante tiene un tipo de venta independiente:
+
+- **Unidad:** se vende por unidad entera
+  (bolsa, paquete, lote, pieza).
+- **Granel:** se vende por peso o volumen
+  (kg, litro). Se ingresa cantidad con decimales.
+- **Fraccion:** se vende por unidad fraccionada
+  desde un lote o paquete. El costo se calcula
+  dividiendo el costo del paquete origen por la
+  cantidad de unidades que contiene.
+
+**Ejemplo con granel (peso):**
+
+Producto padre: "Rosco Carne"
+
+- Rosco Carne 15kg → unidad, $8.000
+- Rosco Carne 20kg → unidad, $10.000
+- Rosco Carne Suelto → granel (x kg)
+
+El sistema calcula automaticamente el costo por kg
+a partir de las variantes paquete:
+
+- Desde bolsa 15kg: $8.000 / 15 = $533/kg
+- Desde bolsa 20kg: $10.000 / 20 = $500/kg
 - **Comparativa de conveniencia:** el sistema muestra
-  cual variante conviene mas para fraccionar:
-  - Rosco 15kg: $8.000 / 15 = $533/kg
-  - Rosco 20kg: $10.000 / 20 = $500/kg
-  - Recomendacion: "Comprar bolsa de 20kg es mas
-    conveniente para fraccionar."
+  cual paquete conviene mas para fraccionar.
 - El precio de granel calculado se puede ajustar
-  manualmente (ej: agregar margen).
+  manualmente.
+
+**Ejemplo con fraccion (unidades desde lote):**
+
+Producto padre: "Papel Higienico"
+
+- Papel Higienico Lote x24 → unidad, $20.000
+- Papel Higienico Unidad → fraccion,
+  cantidad por paquete = 24
+
+El sistema calcula automaticamente:
+
+- Costo unitario: $20.000 / 24 = $833
+- Precio de venta: $833 + margen.
+- En el POS aparece como "Papel Higienico Unidad",
+  sin ninguna referencia a granel.
+- Al vender, se ingresa cantidad entera (1, 2, 3...).
+- El stock del lote se descuenta proporcionalmente
+  (vender 3 unidades = descontar 3/24 de un lote).
+
+**Variante origen para fraccionamiento:**
+
+Tanto la variante granel como la de fraccion deben
+indicar de que variante paquete/lote se fraccionan
+(campo Id_Variante_Origen). Esto permite:
+
+- Calcular el costo automaticamente.
+- Descontar stock del paquete correcto.
+- Mostrar la comparativa de conveniencia cuando hay
+  mas de un paquete posible.
 
 **En el POS:**
 
-- Al buscar un producto padre, se muestran sus variantes
-  para elegir cual agregar al carrito.
-- Si el producto es granel, se puede ingresar por
-  unidades o por monto (igual que la seccion 3.6).
+- Al buscar un producto padre, se muestran sus
+  variantes para elegir cual agregar al carrito.
+- Si es granel, se ingresa por peso/volumen o por
+  monto (igual que la seccion 3.6).
+- Si es fraccion, se ingresa cantidad entera.
 
 ### 5.4 Precios por proveedor
 
@@ -1304,11 +1347,13 @@ Productos
 ├── Politica_Reposicion (objetivo, minimo_x_factor,
 │   manual)
 ├── Factor_Reposicion (default 2)
-├── Tipo_Venta (unidad, granel)
+├── Tipo_Venta (unidad, granel, fraccion)
 ├── Unidad_Medida (kg, litro, unidad)
 ├── Es_Padre (booleano, default false)
 ├── Id_Producto_Padre (FK, nullable)
-├── Cantidad_Por_Paquete (nullable, para calculo granel)
+├── Id_Variante_Origen (FK, nullable, paquete/lote
+│   del que se fracciona)
+├── Cantidad_Por_Paquete (nullable, para fraccionamiento)
 ├── Orden_Favorito (nullable, para fijar en POS)
 ├── Tiene_Insumo (booleano, default false)
 ├── Id_Producto_Insumo (FK, nullable)
