@@ -1065,6 +1065,31 @@ pendientes y se presiona "Registrar recepcion":
 - Util para negociar precios o decidir cambios de
   proveedor.
 
+### 8.8 Faltantes
+
+Lista manual de productos que el usuario detecta que
+van a necesitar reposicion en proximos pedidos.
+
+- **Agregar faltante:** campo de busqueda por nombre,
+  codigo o lector. Al seleccionar un producto se
+  agrega a la lista.
+- **Lista de faltantes:** tabla con los productos
+  agregados, mostrando: nombre, categoria,
+  proveedor principal (proveedor 1), precio del
+  proveedor 1, stock actual.
+- **Ordenamiento:** por proveedor principal, por
+  precio, por categoria, por fecha de agregado.
+- **Filtros:** por proveedor, por categoria.
+- **Acciones:**
+  - Quitar producto de la lista.
+  - Enviar faltantes a un pedido: seleccionar uno
+    o varios productos de la lista y crear un
+    pedido directamente (abre el flujo de 8.1 con
+    los productos precargados). Al confirmar el
+    pedido, se quitan automaticamente de faltantes.
+- La lista persiste hasta que el usuario quite los
+  productos manualmente o los pase a un pedido.
+
 ---
 
 ## 9. Panel de caja
@@ -1578,6 +1603,13 @@ Detalles_Pedido
 ├── Cantidad_Recibida (nullable, al recibir)
 ├── Precio_Unitario_Estimado
 ├── Precio_Unitario_Real (nullable, al recibir)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Faltantes
+├── Id
+├── Id_Producto (FK)
+├── Id_Usuario (FK, quien lo agrego)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -2217,6 +2249,10 @@ POST   /api/pedidos/{id}/enviar-proveedor
 PUT    /api/pedidos/{id}/cancelar
 GET    /api/pedidos/stock-critico
 GET    /api/pedidos/comparativa-proveedores
+GET    /api/pedidos/faltantes
+POST   /api/pedidos/faltantes
+DELETE /api/pedidos/faltantes/{id}
+POST   /api/pedidos/faltantes/crear-pedido
 ```
 
 ### 13.21 Caja
