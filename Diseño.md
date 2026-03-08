@@ -736,10 +736,38 @@ Campos personalizables:
 
 ## 8. Panel de pedidos
 
-### 8.1 Generacion automatica de pedidos
+El panel tiene tres pestañas:
 
-El sistema genera pedidos sugeridos a proveedores
-automaticamente:
+- **Nuevo pedido (+):** crear un pedido manual o
+  automatico.
+- **Pendientes:** pedidos enviados que aun no llegaron.
+- **Historial:** pedidos completados o cancelados.
+
+### 8.1 Crear pedido manual
+
+Boton "+" para armar un pedido desde cero:
+
+1. **Seleccionar proveedor:** se elige el proveedor
+   al que se le va a pedir.
+2. **Agregar productos:** buscador de productos. Al
+   agregar un producto se muestra:
+   - Nombre y codigo del producto.
+   - Precio de compra con ese proveedor.
+   - Stock actual y stock minimo.
+   - **Indicador de ranking:** si ese proveedor NO es
+     el Proveedor 1 (mas barato) del producto, se
+     muestra en rojo la diferencia de precio.
+     Ej: "$450 (+$50 vs Distribuidor X)" indicando
+     que el Proveedor 1 lo vende $50 mas barato.
+   - Campo de cantidad a pedir.
+3. **Total estimado:** se va sumando el total a medida
+   que se agregan productos.
+4. **Guardar pedido:** se guarda con estado "Pendiente"
+   y queda en la pestaña de pendientes.
+
+### 8.2 Generacion automatica de pedidos
+
+Boton "Generar automatico" que analiza el stock:
 
 - Analiza todos los productos que estan por debajo de
   su stock minimo o que necesitan reposicion segun su
@@ -752,35 +780,78 @@ automaticamente:
   reposicion del producto:
   - **Hasta objetivo:** pide la diferencia entre stock
     actual y stock objetivo.
-  - **Hasta minimo x factor:** pide la diferencia entre
-    stock actual y (stock minimo x factor configurable).
+  - **Hasta minimo x factor:** pide la diferencia
+    entre stock actual y (stock minimo x factor).
   - **Manual:** no sugiere cantidad, el usuario la
     ingresa.
+- Se muestra el pedido sugerido con los mismos datos
+  que el pedido manual (precios, ranking, totales).
+- El usuario puede editar todo antes de confirmar:
+  modificar cantidades, quitar productos, agregar
+  otros, o cambiar el proveedor de un producto.
+- Al confirmar, se guarda como pedido "Pendiente".
 
-### 8.2 Vista de pedidos sugeridos
+### 8.3 Pedidos pendientes
 
-- Se muestra un listado por proveedor con los productos
-  sugeridos, cantidades y precios estimados.
-- El usuario puede:
-  - Modificar cantidades sugeridas.
-  - Quitar productos del pedido.
-  - Agregar productos manualmente.
-  - Cambiar el proveedor de un producto (ej: elegir
-    Proveedor 2 en vez del 1 por disponibilidad).
-  - Ver el precio total estimado por proveedor.
-- Boton "Confirmar pedido" que genera una orden de
-  compra (se registra en el modulo de Proveedores).
+Lista de pedidos que fueron enviados al proveedor
+pero aun no llegaron:
 
-### 8.3 Historial de pedidos
+- Tabla con: numero de pedido, proveedor, cantidad
+  de productos, total estimado, fecha, dias pendiente.
+- Al seleccionar un pedido pendiente se ve el detalle
+  completo: productos, cantidades pedidas, precios
+  estimados.
 
-- Lista de todos los pedidos generados con fecha,
-  proveedor, monto total, estado.
-- Estados: borrador, enviado, recibido (parcial o
-  total), cancelado.
-- Al marcar como "Recibido", se puede actualizar el
-  stock automaticamente.
+### 8.4 Recepcion de pedido
 
-### 8.4 Comparativa de proveedores
+Cuando el pedido llega, se selecciona de la lista de
+pendientes y se presiona "Registrar recepcion":
+
+1. Se abre el pedido original con todos los productos
+   y cantidades que se pidieron.
+2. **Para cada producto, el usuario completa:**
+   - **Cantidad recibida:** puede ser igual, menor o
+     mayor a la pedida. Si es distinta, se resalta
+     la diferencia.
+   - **Precio real:** si el proveedor cambio el precio,
+     se ingresa el nuevo. Se muestra la diferencia
+     con el estimado (ej: "Estimado: $400, Real:
+     $450, Diferencia: +$50" en rojo).
+   - **No recibido:** se puede marcar un producto como
+     no entregado (cantidad recibida = 0).
+3. **Resumen de recepcion:** antes de confirmar se
+   muestra:
+   - Productos recibidos completos.
+   - Productos con diferencia de cantidad.
+   - Productos no recibidos.
+   - Total estimado vs total real.
+   - Diferencia total.
+4. **Confirmar recepcion:**
+   - El stock se actualiza automaticamente con las
+     cantidades realmente recibidas.
+   - Los precios del proveedor se actualizan si
+     cambiaron (se recalcula el ranking).
+   - Se registra en el historial de precios.
+   - El pedido pasa a estado "Recibido" y se mueve
+     al historial.
+   - Si faltaron productos, se puede opcionalmente
+     generar un nuevo pedido con lo faltante.
+   - El pedido guarda tanto la informacion original
+     (lo que se pidio) como la recepcion (lo que
+     realmente llego).
+
+### 8.5 Historial de pedidos
+
+- Lista de todos los pedidos con fecha, proveedor,
+  total estimado, total real, estado.
+- Estados: pendiente, recibido, cancelado.
+- Al ver el detalle de un pedido recibido se muestra
+  la comparativa lado a lado: pedido vs recepcion
+  (cantidades y precios estimados vs reales).
+- Filtros por proveedor, por rango de fechas, por
+  estado.
+
+### 8.6 Comparativa de proveedores
 
 - Vista general donde se ven todos los productos con
   sus proveedores y precios.
@@ -1110,13 +1181,13 @@ Precios_Proveedor
 Pedidos
 ├── Id
 ├── Id_Proveedor (FK)
-├── Estado (borrador, enviado, recibido_parcial,
-│   recibido_total, cancelado)
+├── Estado (pendiente, recibido, cancelado)
 ├── Total_Estimado
+├── Total_Real (nullable, al recibir)
 ├── Notas
 ├── Id_Usuario (FK)
-├── Fecha_Envio (nullable)
 ├── Fecha_Recepcion (nullable)
+├── Id_Usuario_Recepcion (FK, nullable)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -1125,8 +1196,9 @@ Detalles_Pedido
 ├── Id_Pedido (FK)
 ├── Id_Producto (FK)
 ├── Cantidad_Pedida
-├── Cantidad_Recibida (default 0)
+├── Cantidad_Recibida (nullable, al recibir)
 ├── Precio_Unitario_Estimado
+├── Precio_Unitario_Real (nullable, al recibir)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
