@@ -16,13 +16,16 @@ de navegacion lateral:
 
 1. **Ventas (POS)** - Punto de venta principal.
 2. **Envios** - Seguimiento de entregas pendientes.
-3. **Productos** - CRUD de productos, categorias, stock.
+3. **Productos** - CRUD de productos, categorias, stock,
+   variantes, precios por proveedor.
 4. **Clientes** - Gestion de clientes y sus datos.
 5. **Proveedores** - Gestion de proveedores y cuentas
    corrientes.
-6. **Caja** - Apertura, cierre y arqueo de caja diaria.
-7. **Estadisticas** - Dashboard con metricas y reportes.
-8. **Configuracion** - Usuarios, roles, metodos de pago,
+6. **Pedidos** - Generacion automatica de pedidos a
+   proveedores segun stock y mejor precio.
+7. **Caja** - Apertura, cierre y arqueo de caja diaria.
+8. **Estadisticas** - Dashboard con metricas y reportes.
+9. **Configuracion** - Usuarios, roles, metodos de pago,
    envios, datos del negocio.
 
 ---
@@ -51,7 +54,45 @@ Pantalla dividida en dos secciones:
 └─────────────────────────┴──────────────────┘
 ```
 
-### 3.2 Buscador de productos
+### 3.2 Ventas simultaneas
+
+Se pueden tener multiples ventas abiertas al mismo
+tiempo. Dos modos de visualizacion:
+
+- **Pestañas (por defecto):** arriba del POS se muestran
+  pestañas tipo navegador: "Venta 1", "Venta 2", "+".
+  Cada pestaña es un POS completo e independiente. Se
+  puede ir y venir entre pestañas sin perder el estado
+  del carrito.
+- **Pantalla dividida:** boton para dividir la pantalla
+  en dos POS lado a lado. Util cuando se necesita ver
+  ambas ventas al mismo tiempo.
+
+```
+Modo pestañas:
+┌──────────────────────────────────────┐
+│ [Venta 1] [Venta 2] [+]             │
+│──────────────────────────────────────│
+│  [Buscar..]        │  CARRITO        │
+│  Productos         │  ...            │
+│                    │  [COBRAR]       │
+└──────────────────────────────────────┘
+
+Modo dividido:
+┌──────────────────┬───────────────────┐
+│ VENTA 1          │ VENTA 2           │
+│ [Buscar..]       │ [Buscar..]        │
+│ Prods | Carrito  │ Prods | Carrito   │
+│       | [COBRAR] │       | [COBRAR]  │
+└──────────────────┴───────────────────┘
+```
+
+- Al cobrar una venta, la pestaña se cierra
+  automaticamente.
+- Se puede descartar una venta sin cobrar (con
+  confirmacion).
+
+### 3.3 Buscador de productos
 
 - Barra de texto en la parte superior izquierda.
 - Busca por nombre, codigo o categoria.
@@ -61,7 +102,25 @@ Pantalla dividida en dos secciones:
   - **Lista compleja:** nombre + precio + foto + stock.
   - **Cuadricula:** tarjetas con foto, nombre y precio.
 
-### 3.3 Agregar productos al carrito
+### 3.4 Orden de resultados
+
+Los resultados del buscador se ordenan segun un criterio
+configurable por el usuario:
+
+- **Mas vendidos (por defecto):** productos con mas
+  unidades vendidas en los ultimos X dias aparecen
+  primero.
+- **Mas recientes:** ultimos productos agregados primero.
+- **Alfabetico:** A-Z o Z-A.
+- **Por categoria:** agrupados por categoria.
+- **Orden manual (favoritos):** el usuario puede "fijar"
+  productos arriba, marcandolos como destacados. Los
+  productos fijados siempre aparecen primero,
+  independientemente del criterio elegido.
+- El criterio se guarda por usuario (cada vendedor puede
+  tener su propio orden preferido).
+
+### 3.5 Agregar productos al carrito
 
 - Un click en un producto lo agrega al carrito (1 unidad).
 - Clicks sucesivos incrementan la cantidad.
@@ -69,7 +128,7 @@ Pantalla dividida en dos secciones:
 - Se puede modificar el precio de venta de cada item en
   el carrito (precio personalizado para esa venta).
 
-### 3.4 Productos a granel
+### 3.6 Productos a granel
 
 - Los productos marcados como "granel" permiten dos modos
   de ingreso:
@@ -79,7 +138,7 @@ Pantalla dividida en dos secciones:
     Ejemplo: producto a $1.000/kg, se ingresa $3.000,
     el sistema pone 3 unidades.
 
-### 3.5 Descuentos
+### 3.7 Descuentos
 
 Se pueden aplicar descuentos de varias formas:
 
@@ -93,7 +152,7 @@ Se pueden aplicar descuentos de varias formas:
   ficha del cliente. Al seleccionar el cliente en la venta,
   se aplica su descuento predeterminado.
 
-### 3.6 Seleccion de cliente
+### 3.8 Seleccion de cliente
 
 - Selector de cliente en la parte inferior izquierda.
 - Opcional: se puede vender sin cliente (consumidor final).
@@ -104,7 +163,7 @@ Se pueden aplicar descuentos de varias formas:
   direccion y telefono se cargan automaticamente desde la
   ficha del cliente.
 
-### 3.7 Envio
+### 3.9 Envio
 
 Antes de cobrar, se puede marcar la venta como envio:
 
@@ -123,7 +182,7 @@ Antes de cobrar, se puede marcar la venta como envio:
     se registra pero el dinero NO ingresa a caja hasta
     que el envio se marque como entregado y pagado.
 
-### 3.8 Cobro y cierre de venta
+### 3.10 Cobro y cierre de venta
 
 Al presionar "Cobrar" se abre un modal con:
 
@@ -143,7 +202,7 @@ Al presionar "Cobrar" se abre un modal con:
   y tipos de tarjeta son todos configurables desde el
   panel de configuracion.
 
-### 3.9 Facturacion AFIP (fase posterior)
+### 3.11 Facturacion AFIP (fase posterior)
 
 - Configurable: definir que metodos de pago generan
   factura automaticamente (ej: solo tarjeta de credito).
@@ -151,7 +210,7 @@ Al presionar "Cobrar" se abre un modal con:
   electronicas.
 - Se implementa en una fase posterior al sistema base.
 
-### 3.10 Ticket/comprobante
+### 3.12 Ticket/comprobante
 
 Al confirmar la venta:
 
@@ -238,16 +297,75 @@ Campos del producto:
 - **Stock actual** (solo lectura, se modifica desde
   movimientos de stock).
 - **Stock minimo** (para alertas de stock bajo).
+- **Stock objetivo** (opcional, para pedidos automaticos.
+  Si no se define, se usa stock minimo x2 por defecto).
+- **Politica de reposicion:** configurable por producto
+  (hasta objetivo, hasta minimo x factor, manual).
 - **Tipo de venta:** unidad o granel (kg, litro, etc.).
 - **Activo/Inactivo.**
 
-### 5.3 Categorias
+### 5.3 Variantes de producto
+
+Un producto puede tener variantes (distintas
+presentaciones del mismo articulo):
+
+- **Producto padre:** el articulo base (ej: "Rosco
+  Carne"). No tiene stock ni precio propio.
+- **Variantes:** las presentaciones concretas. Cada
+  variante tiene su propio codigo, stock, precio y
+  proveedores. Ej:
+  - Rosco Carne 15kg - Codigo 1001 - $8.000
+  - Rosco Carne 20kg - Codigo 1002 - $10.000
+  - Rosco Carne Granel (x kg) - Codigo 1003
+
+**Calculo de granel por paquete:**
+
+- Si una variante es granel y otra es paquete, el
+  sistema calcula automaticamente el precio por unidad
+  fraccionada.
+  Ej: Rosco 20kg a $10.000 = $500/kg automatico.
+- **Comparativa de conveniencia:** el sistema muestra
+  cual variante conviene mas para fraccionar:
+  - Rosco 15kg: $8.000 / 15 = $533/kg
+  - Rosco 20kg: $10.000 / 20 = $500/kg
+  - Recomendacion: "Comprar bolsa de 20kg es mas
+    conveniente para fraccionar."
+- El precio de granel calculado se puede ajustar
+  manualmente (ej: agregar margen).
+
+**En el POS:**
+
+- Al buscar un producto padre, se muestran sus variantes
+  para elegir cual agregar al carrito.
+- Si el producto es granel, se puede ingresar por
+  unidades o por monto (igual que la seccion 3.6).
+
+### 5.4 Precios por proveedor
+
+Cada producto (o variante) puede tener multiples precios
+segun el proveedor que lo suministra:
+
+- **Precio por proveedor:** al asociar un producto a un
+  proveedor, se registra el precio de compra de ese
+  proveedor.
+- **Ranking automatico:** el sistema ordena los
+  proveedores de mas barato a mas caro:
+  - Proveedor 1 (mas barato): Distribuidor X - $400
+  - Proveedor 2: Mayorista Y - $450
+  - Proveedor 3: Proveedor Z - $500
+- El ranking se muestra en la ficha del producto y se
+  usa en el modulo de Pedidos para elegir
+  automaticamente al proveedor mas barato.
+- Se puede subir/actualizar precios por proveedor
+  mediante CSV (ver seccion 5.9).
+
+### 5.5 Categorias
 
 - CRUD de categorias con nombre y descripcion.
 - Un producto pertenece a una categoria.
 - Ejemplos: Alimentos, Accesorios, Higiene, Medicamentos.
 
-### 5.4 Listas de precios
+### 5.6 Listas de precios
 
 - Por defecto existe una lista "General" (precio de venta
   principal).
@@ -256,7 +374,7 @@ Campos del producto:
 - Al vender, se puede seleccionar que lista de precios
   usar.
 
-### 5.5 Movimientos de stock
+### 5.7 Movimientos de stock
 
 - **Ingreso:** compra a proveedor, devolucion de cliente,
   ajuste positivo.
@@ -267,7 +385,7 @@ Campos del producto:
 - Historial completo de movimientos por producto.
 - El historial es editable (corregir errores).
 
-### 5.6 Codigos de producto
+### 5.8 Codigos de producto
 
 El sistema genera codigos automaticamente para productos
 nuevos, siguiendo criterios configurables:
@@ -289,7 +407,7 @@ nuevos, siguiendo criterios configurables:
   modificarlo antes de guardar.
 - Los codigos deben ser unicos en todo el sistema.
 
-### 5.7 Importacion y exportacion CSV
+### 5.9 Importacion y exportacion CSV
 
 **Exportar productos a CSV:**
 
@@ -322,6 +440,16 @@ nuevos, siguiendo criterios configurables:
 - Para actualizar, se usa el **codigo de producto** como
   clave de match. Solo se sobreescriben los campos que
   vengan en el CSV.
+
+**Importar precios por proveedor desde CSV:**
+
+- En la ficha del proveedor, boton "Importar precios CSV".
+- El CSV contiene: codigo producto, precio de compra.
+- Pareo de columnas manual (igual que productos).
+- Vista previa antes de confirmar.
+- Actualiza los precios de ese proveedor para los
+  productos indicados. Recalcula el ranking de
+  proveedores automaticamente.
 
 ---
 
@@ -402,23 +530,82 @@ Campos personalizables:
 
 ---
 
-## 8. Panel de caja
+## 8. Panel de pedidos
 
-### 8.1 Apertura de caja
+### 8.1 Generacion automatica de pedidos
+
+El sistema genera pedidos sugeridos a proveedores
+automaticamente:
+
+- Analiza todos los productos que estan por debajo de
+  su stock minimo o que necesitan reposicion segun su
+  politica configurada.
+- Para cada producto, selecciona automaticamente al
+  **proveedor mas barato** (Proveedor 1 del ranking).
+- Agrupa los productos por proveedor, generando un
+  pedido sugerido por proveedor.
+- Calcula la cantidad a pedir segun la politica de
+  reposicion del producto:
+  - **Hasta objetivo:** pide la diferencia entre stock
+    actual y stock objetivo.
+  - **Hasta minimo x factor:** pide la diferencia entre
+    stock actual y (stock minimo x factor configurable).
+  - **Manual:** no sugiere cantidad, el usuario la
+    ingresa.
+
+### 8.2 Vista de pedidos sugeridos
+
+- Se muestra un listado por proveedor con los productos
+  sugeridos, cantidades y precios estimados.
+- El usuario puede:
+  - Modificar cantidades sugeridas.
+  - Quitar productos del pedido.
+  - Agregar productos manualmente.
+  - Cambiar el proveedor de un producto (ej: elegir
+    Proveedor 2 en vez del 1 por disponibilidad).
+  - Ver el precio total estimado por proveedor.
+- Boton "Confirmar pedido" que genera una orden de
+  compra (se registra en el modulo de Proveedores).
+
+### 8.3 Historial de pedidos
+
+- Lista de todos los pedidos generados con fecha,
+  proveedor, monto total, estado.
+- Estados: borrador, enviado, recibido (parcial o
+  total), cancelado.
+- Al marcar como "Recibido", se puede actualizar el
+  stock automaticamente.
+
+### 8.4 Comparativa de proveedores
+
+- Vista general donde se ven todos los productos con
+  sus proveedores y precios.
+- Tabla comparativa: Producto | Proveedor 1 (precio) |
+  Proveedor 2 (precio) | Proveedor 3 (precio).
+- Filtros por categoria, por proveedor, por diferencia
+  de precio.
+- Util para negociar precios o decidir cambios de
+  proveedor.
+
+---
+
+## 9. Panel de caja
+
+### 9.1 Apertura de caja
 
 - Boton "Abrir caja" con campo de monto inicial en
   efectivo.
 - Registra quien abrio la caja y a que hora.
 - Solo se puede vender con la caja abierta.
 
-### 8.2 Durante la jornada
+### 9.2 Durante la jornada
 
 - Todas las ventas en efectivo se suman a la caja.
 - Se pueden registrar egresos manuales (ej: pago a
   proveedor en efectivo, retiro de efectivo).
 - Se pueden registrar ingresos manuales (ej: prestamo).
 
-### 8.3 Cierre de caja
+### 9.3 Cierre de caja
 
 - Boton "Cerrar caja."
 - Se muestra:
@@ -432,7 +619,7 @@ Campos personalizables:
 - Se guarda el cierre con todos los datos y la
   diferencia.
 
-### 8.4 Historial de cajas
+### 9.4 Historial de cajas
 
 - Lista de todas las cajas con: fecha, usuario, monto
   inicial, monto final, diferencia.
@@ -440,9 +627,9 @@ Campos personalizables:
 
 ---
 
-## 9. Panel de estadisticas
+## 10. Panel de estadisticas
 
-### 9.1 Dashboard principal
+### 10.1 Dashboard principal
 
 Tarjetas de resumen rapido:
 
@@ -452,7 +639,7 @@ Tarjetas de resumen rapido:
 - Margen de ganancia promedio.
 - Productos con stock critico.
 
-### 9.2 Graficos
+### 10.2 Graficos
 
 - **Ventas por periodo:** grafico de lineas o barras
   (diario, semanal, mensual). Comparativa entre periodos.
@@ -462,7 +649,7 @@ Tarjetas de resumen rapido:
 - **Ingresos vs costos:** comparativa para ver margen.
 - **Ventas por metodo de pago:** distribucion.
 
-### 9.3 Metricas avanzadas
+### 10.3 Metricas avanzadas
 
 - **Rendimiento por vendedor:** ventas totales, cantidad
   de operaciones, ticket promedio por vendedor.
@@ -473,13 +660,13 @@ Tarjetas de resumen rapido:
 - **Tendencias:** comparativa mes a mes, deteccion de
   crecimiento o caida.
 
-### 9.4 Alertas
+### 10.4 Alertas
 
 - Productos por debajo del stock minimo.
 - Productos sin ventas en los ultimos X dias.
 - Cuentas corrientes con deuda alta.
 
-### 9.5 Exportacion
+### 10.5 Exportacion
 
 - Exportar cualquier reporte a CSV.
 - Exportar a PDF.
@@ -487,9 +674,9 @@ Tarjetas de resumen rapido:
 
 ---
 
-## 10. Panel de configuracion
+## 11. Panel de configuracion
 
-### 10.1 Usuarios y roles
+### 11.1 Usuarios y roles
 
 - CRUD de usuarios del sistema.
 - Roles:
@@ -499,33 +686,33 @@ Tarjetas de resumen rapido:
     estadisticas completas.
 - Cada usuario tiene: nombre, email, contraseña, rol.
 
-### 10.2 Metodos de pago
+### 11.2 Metodos de pago
 
 - CRUD de metodos de pago (efectivo, transferencia,
   tarjeta credito, tarjeta debito, etc.).
 - Activar/desactivar metodos.
 
-### 10.3 Cuentas de transferencia
+### 11.3 Cuentas de transferencia
 
 - CRUD de cuentas destino para transferencias.
 - Campos: nombre, entidad (Mercado Pago, banco, etc.),
   alias/CBU, titular.
 - Ej: "Patricio (Mercado Pago)", "Sergio (Mercado Pago)".
 
-### 10.4 Terminales de pago (posnet)
+### 11.4 Terminales de pago (posnet)
 
 - CRUD de terminales.
 - Campos: nombre/numero, ubicacion, proveedor.
 - Ej: "Terminal 1", "Terminal 2".
 
-### 10.5 Tipos de tarjeta
+### 11.5 Tipos de tarjeta
 
 - CRUD de tipos de tarjeta.
 - Por defecto: VISA, MasterCard, Naranja, American
   Express, Cabal.
 - Se pueden agregar o desactivar.
 
-### 10.6 Datos del negocio
+### 11.6 Datos del negocio
 
 - Nombre del negocio.
 - Direccion.
@@ -533,7 +720,7 @@ Tarjetas de resumen rapido:
 - Logo (para tickets).
 - CUIT (para facturacion futura).
 
-### 10.7 Configuracion de envios
+### 11.7 Configuracion de envios
 
 - **Costo de envio:** configurable con varias modalidades:
   - **Exacto:** un monto fijo (ej: $1.500 siempre).
@@ -550,7 +737,7 @@ Tarjetas de resumen rapido:
 - El costo de envio calculado se puede quitar o modificar
   manualmente en cada venta individual.
 
-### 10.8 Configuracion de codigos de producto
+### 11.8 Configuracion de codigos de producto
 
 - **Criterio global por defecto:**
   - Secuencial numerico (0001, 0002...).
@@ -562,7 +749,7 @@ Tarjetas de resumen rapido:
 - **Longitud del codigo:** configurable (ej: 4 digitos,
   6 digitos).
 
-### 10.9 Reglas de facturacion (fase posterior)
+### 11.9 Reglas de facturacion (fase posterior)
 
 - Configurar que metodos de pago generan factura AFIP
   automaticamente.
@@ -570,9 +757,9 @@ Tarjetas de resumen rapido:
 
 ---
 
-## 11. Modelo de datos
+## 12. Modelo de datos
 
-### 11.1 Entidades principales
+### 12.1 Entidades principales
 
 ```
 Usuarios
@@ -603,10 +790,51 @@ Productos
 ├── Precio_Costo
 ├── Stock_Actual
 ├── Stock_Minimo
+├── Stock_Objetivo (nullable)
+├── Politica_Reposicion (objetivo, minimo_x_factor,
+│   manual)
+├── Factor_Reposicion (default 2)
 ├── Tipo_Venta (unidad, granel)
 ├── Unidad_Medida (kg, litro, unidad)
+├── Es_Padre (booleano, default false)
+├── Id_Producto_Padre (FK, nullable)
+├── Cantidad_Por_Paquete (nullable, para calculo granel)
+├── Orden_Favorito (nullable, para fijar en POS)
 ├── Activo
 ├── Id_Categoria (FK)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Precios_Proveedor
+├── Id
+├── Id_Producto (FK)
+├── Id_Proveedor (FK)
+├── Precio_Compra
+├── Ranking (calculado: 1 = mas barato)
+├── Fecha_Actualizacion_Precio
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Pedidos
+├── Id
+├── Id_Proveedor (FK)
+├── Estado (borrador, enviado, recibido_parcial,
+│   recibido_total, cancelado)
+├── Total_Estimado
+├── Notas
+├── Id_Usuario (FK)
+├── Fecha_Envio (nullable)
+├── Fecha_Recepcion (nullable)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Detalles_Pedido
+├── Id
+├── Id_Pedido (FK)
+├── Id_Producto (FK)
+├── Cantidad_Pedida
+├── Cantidad_Recibida (default 0)
+├── Precio_Unitario_Estimado
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -866,9 +1094,9 @@ Configuracion_Codigos
 
 ---
 
-## 12. API - Endpoints principales
+## 13. API - Endpoints principales
 
-### 12.1 Autenticacion
+### 13.1 Autenticacion
 
 ```
 POST   /api/auth/login
@@ -876,7 +1104,7 @@ POST   /api/auth/registro
 GET    /api/auth/perfil
 ```
 
-### 12.2 Usuarios
+### 13.2 Usuarios
 
 ```
 GET    /api/usuarios
@@ -886,7 +1114,7 @@ PUT    /api/usuarios/{id}
 DELETE /api/usuarios/{id}
 ```
 
-### 12.3 Productos
+### 13.3 Productos
 
 ```
 GET    /api/productos
@@ -895,13 +1123,36 @@ POST   /api/productos
 PUT    /api/productos/{id}
 DELETE /api/productos/{id}
 GET    /api/productos/{id}/movimientos-stock
+GET    /api/productos/{id}/variantes
+POST   /api/productos/{id}/variantes
+GET    /api/productos/{id}/proveedores-precios
+GET    /api/productos/{id}/comparativa-granel
 GET    /api/productos/stock-bajo
 GET    /api/productos/exportar-csv
 POST   /api/productos/importar-csv
 POST   /api/productos/importar-csv/preview
 ```
 
-### 12.4 Categorias
+### 13.4 Variantes
+
+```
+GET    /api/variantes/{id}
+PUT    /api/variantes/{id}
+DELETE /api/variantes/{id}
+```
+
+### 13.5 Precios por proveedor
+
+```
+GET    /api/precios-proveedor
+POST   /api/precios-proveedor
+PUT    /api/precios-proveedor/{id}
+POST   /api/precios-proveedor/importar-csv
+POST   /api/precios-proveedor/importar-csv/preview
+GET    /api/precios-proveedor/comparativa
+```
+
+### 13.6 Categorias
 
 ```
 GET    /api/categorias
@@ -910,7 +1161,7 @@ PUT    /api/categorias/{id}
 DELETE /api/categorias/{id}
 ```
 
-### 12.5 Listas de precios
+### 13.7 Listas de precios
 
 ```
 GET    /api/listas-precios
@@ -920,7 +1171,7 @@ DELETE /api/listas-precios/{id}
 PUT    /api/listas-precios/{id}/productos
 ```
 
-### 12.6 Stock
+### 13.8 Stock
 
 ```
 POST   /api/stock/ingreso
@@ -929,7 +1180,7 @@ PUT    /api/stock/movimientos/{id}
 GET    /api/stock/movimientos
 ```
 
-### 12.7 Ventas
+### 13.9 Ventas
 
 ```
 POST   /api/ventas
@@ -939,7 +1190,7 @@ POST   /api/ventas/{id}/anular
 GET    /api/ventas/{id}/ticket
 ```
 
-### 12.8 Envios
+### 13.10 Envios
 
 ```
 GET    /api/envios
@@ -949,7 +1200,7 @@ POST   /api/envios/{id}/pago
 GET    /api/envios/pendientes
 ```
 
-### 12.9 Clientes
+### 13.11 Clientes
 
 ```
 GET    /api/clientes
@@ -960,7 +1211,7 @@ DELETE /api/clientes/{id}
 GET    /api/clientes/{id}/historial
 ```
 
-### 12.10 Campos custom de clientes
+### 13.12 Campos custom de clientes
 
 ```
 GET    /api/campos-custom
@@ -969,7 +1220,7 @@ PUT    /api/campos-custom/{id}
 DELETE /api/campos-custom/{id}
 ```
 
-### 12.11 Proveedores
+### 13.13 Proveedores
 
 ```
 GET    /api/proveedores
@@ -978,9 +1229,10 @@ POST   /api/proveedores
 PUT    /api/proveedores/{id}
 DELETE /api/proveedores/{id}
 GET    /api/proveedores/{id}/cuenta-corriente
+POST   /api/proveedores/{id}/importar-precios-csv
 ```
 
-### 12.12 Ordenes de compra
+### 13.14 Ordenes de compra
 
 ```
 POST   /api/ordenes-compra
@@ -988,14 +1240,26 @@ GET    /api/ordenes-compra
 GET    /api/ordenes-compra/{id}
 ```
 
-### 12.13 Pagos a proveedores
+### 13.15 Pagos a proveedores
 
 ```
 POST   /api/proveedores/{id}/pagos
 GET    /api/proveedores/{id}/pagos
 ```
 
-### 12.14 Caja
+### 13.16 Pedidos
+
+```
+POST   /api/pedidos/generar
+GET    /api/pedidos
+GET    /api/pedidos/{id}
+PUT    /api/pedidos/{id}
+POST   /api/pedidos/{id}/confirmar
+PUT    /api/pedidos/{id}/estado
+GET    /api/pedidos/comparativa-proveedores
+```
+
+### 13.17 Caja
 
 ```
 POST   /api/caja/abrir
@@ -1006,7 +1270,7 @@ GET    /api/caja/historial
 GET    /api/caja/{id}
 ```
 
-### 12.15 Estadisticas
+### 13.18 Estadisticas
 
 ```
 GET    /api/estadisticas/ventas
@@ -1021,7 +1285,7 @@ GET    /api/estadisticas/alertas
 GET    /api/estadisticas/exportar
 ```
 
-### 12.16 Configuracion
+### 13.19 Configuracion
 
 ```
 GET    /api/configuracion/negocio
@@ -1042,9 +1306,9 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
 
 ---
 
-## 13. Integraciones futuras (fases posteriores)
+## 14. Integraciones futuras (fases posteriores)
 
-### 13.1 Mercado Pago
+### 14.1 Mercado Pago
 
 - Integracion con API de Mercado Pago para verificar
   transferencias entrantes.
@@ -1052,7 +1316,7 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
   automaticamente la venta.
 - Webhook para notificaciones en tiempo real.
 
-### 13.2 AFIP - Facturacion electronica
+### 14.2 AFIP - Facturacion electronica
 
 - Integracion con web services de AFIP.
 - Emision de facturas A, B y C.
@@ -1062,7 +1326,7 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
 
 ---
 
-## 14. Seguridad
+## 15. Seguridad
 
 - Autenticacion con JWT (access + refresh tokens).
 - Contraseñas hasheadas con bcrypt.
@@ -1074,7 +1338,7 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
 
 ---
 
-## 15. Consideraciones de UX
+## 16. Consideraciones de UX
 
 - Interfaz responsive (funciona en PC y tablet).
 - Navegacion lateral colapsable.
