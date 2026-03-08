@@ -127,6 +127,12 @@ configurable por el usuario:
 - En el carrito se puede editar manualmente la cantidad.
 - Se puede modificar el precio de venta de cada item en
   el carrito (precio personalizado para esa venta).
+- **Insumo del cliente:** si un producto tiene insumo
+  asociado (ej: envase), aparece un toggle "Trae
+  insumo" en el item del carrito. Al activarlo, se
+  descuenta el costo del insumo del precio de venta
+  de ese item. Ej: Suavizante 1lt a $1.400 con envase
+  de $200, si el cliente trae su envase → $1.200.
 
 ### 3.6 Productos a granel
 
@@ -397,6 +403,25 @@ Campos del producto:
 - **Politica de reposicion:** configurable por producto
   (hasta objetivo, hasta minimo x factor, manual).
 - **Tipo de venta:** unidad o granel (kg, litro, etc.).
+- **Empresa** (selector, opcional).
+- **Marca** (selector filtrado por empresa, opcional).
+- **Subcategoria** (selector filtrado por categoria,
+  opcional).
+- **Insumo asociado:** un producto puede tener un
+  insumo cuyo costo se suma al precio de costo.
+  - Toggle "Tiene insumo asociado" (ej: envase,
+    jeringa, bolsa, etc.).
+  - Campo para seleccionar el producto insumo (por
+    codigo o nombre).
+  - El costo total del producto se calcula como:
+    costo propio + costo del insumo.
+  - El precio de venta se calcula a partir del costo
+    total (costo + insumo + margen).
+  - Ej: Suavizante x 1lt cuesta $800, Envase 1lt
+    cuesta $200. Costo total = $1.000. Con margen
+    40% → precio venta = $1.400.
+  - Si el insumo cambia de precio, el costo total
+    se actualiza automaticamente.
 - **Activo/Inactivo.**
 
 ### 5.3 Variantes de producto
@@ -454,13 +479,35 @@ segun el proveedor que lo suministra:
 - Se puede subir/actualizar precios por proveedor
   mediante CSV (ver seccion 5.9).
 
-### 5.5 Categorias
+### 5.5 Categorias y subcategorias
 
 - CRUD de categorias con nombre y descripcion.
-- Un producto pertenece a una categoria.
-- Ejemplos: Alimentos, Accesorios, Higiene, Medicamentos.
+- Cada categoria puede tener **subcategorias**.
+  Ej: Alimentos > Perros, Alimentos > Gatos.
+- Un producto pertenece a una categoria y
+  opcionalmente a una subcategoria.
+- **Margen de ganancia por categoria:** cada categoria
+  tiene un margen de ganancia configurable (ej: 40%).
+  Al cargar un producto, el precio de venta se calcula
+  automaticamente como costo + margen de la categoria.
+  Se puede sobreescribir manualmente por producto.
+- Si una subcategoria tiene su propio margen definido,
+  este tiene prioridad sobre el de la categoria padre.
 
-### 5.6 Listas de precios
+### 5.6 Empresas y marcas
+
+- CRUD de **empresas** (fabricantes/distribuidores).
+  Ej: Royal Canin, Eukanuba, Bayer.
+- CRUD de **marcas** (lineas dentro de una empresa).
+  Cada marca pertenece a una empresa.
+  Ej: Empresa "Purina" → Marcas "Dog Chow",
+  "Cat Chow", "Pro Plan".
+- Cada producto puede asociarse a una empresa y una
+  marca (ambos opcionales).
+- Filtros por empresa y marca en el listado de
+  productos.
+
+### 5.7 Listas de precios
 
 - Por defecto existe una lista "General" (precio de venta
   principal).
@@ -469,7 +516,7 @@ segun el proveedor que lo suministra:
 - Al vender, se puede seleccionar que lista de precios
   usar.
 
-### 5.7 Movimientos de stock
+### 5.8 Movimientos de stock
 
 - **Ingreso:** compra a proveedor, devolucion de cliente,
   ajuste positivo.
@@ -480,7 +527,7 @@ segun el proveedor que lo suministra:
 - Historial completo de movimientos por producto.
 - El historial es editable (corregir errores).
 
-### 5.8 Codigos de producto
+### 5.9 Codigos de producto
 
 El sistema genera codigos automaticamente para productos
 nuevos, siguiendo criterios configurables:
@@ -502,7 +549,7 @@ nuevos, siguiendo criterios configurables:
   modificarlo antes de guardar.
 - Los codigos deben ser unicos en todo el sistema.
 
-### 5.9 Importacion y exportacion CSV
+### 5.10 Importacion y exportacion CSV
 
 **Exportar productos a CSV:**
 
@@ -545,6 +592,37 @@ nuevos, siguiendo criterios configurables:
 - Actualiza los precios de ese proveedor para los
   productos indicados. Recalcula el ranking de
   proveedores automaticamente.
+
+### 5.11 Aumentos masivos de precio
+
+Permite aumentar el precio de costo de multiples
+productos a la vez, filtrados por:
+
+- **Categoria** (todos los productos de una categoria).
+- **Subcategoria** (productos de una subcategoria).
+- **Empresa** (productos de una empresa).
+- **Marca** (productos de una marca).
+- Se pueden combinar filtros (ej: categoria "Alimentos"
+  + empresa "Royal Canin").
+
+**Tipo de aumento:**
+
+- **Por porcentaje:** aumentar el costo un X%
+  (ej: +15%).
+- **Por monto fijo:** sumar un monto al costo
+  (ej: +$200).
+
+**Flujo:**
+
+1. Seleccionar filtros y tipo/valor de aumento.
+2. **Vista previa:** se muestra una tabla con los
+   productos afectados, costo actual, costo nuevo,
+   y precio de venta recalculado (segun margen de
+   la categoria).
+3. Confirmar o cancelar.
+4. Al confirmar, se actualizan los costos y se
+   recalculan los precios de venta. Se registra en
+   el historial de precios y en el log de auditoria.
 
 ---
 
@@ -927,8 +1005,35 @@ Categorias
 ├── Id
 ├── Nombre
 ├── Descripcion
+├── Margen_Ganancia (nullable, ej: 40.0)
 ├── Prefijo_Codigo (nullable, para codigos por categoria)
 ├── Ultimo_Secuencial (default 0)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Subcategorias
+├── Id
+├── Id_Categoria (FK)
+├── Nombre
+├── Descripcion
+├── Margen_Ganancia (nullable, sobreescribe categoria)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Empresas
+├── Id
+├── Nombre
+├── Descripcion
+├── Activo
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Marcas
+├── Id
+├── Id_Empresa (FK)
+├── Nombre
+├── Descripcion
+├── Activo
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -951,8 +1056,13 @@ Productos
 ├── Id_Producto_Padre (FK, nullable)
 ├── Cantidad_Por_Paquete (nullable, para calculo granel)
 ├── Orden_Favorito (nullable, para fijar en POS)
+├── Tiene_Insumo (booleano, default false)
+├── Id_Producto_Insumo (FK, nullable)
 ├── Activo
 ├── Id_Categoria (FK)
+├── Id_Subcategoria (FK, nullable)
+├── Id_Empresa (FK, nullable)
+├── Id_Marca (FK, nullable)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -1161,6 +1271,8 @@ Detalles_Venta
 ├── Precio_Original
 ├── Tipo_Descuento_Item
 ├── Valor_Descuento_Item
+├── Trae_Insumo (booleano, default false)
+├── Descuento_Insumo (default 0, monto descontado)
 ├── Subtotal
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
@@ -1378,16 +1490,48 @@ POST   /api/precios-proveedor/importar-csv/preview
 GET    /api/precios-proveedor/comparativa
 ```
 
-### 13.6 Categorias
+### 13.6 Categorias y subcategorias
 
 ```
 GET    /api/categorias
 POST   /api/categorias
 PUT    /api/categorias/{id}
 DELETE /api/categorias/{id}
+GET    /api/categorias/{id}/subcategorias
+POST   /api/subcategorias
+PUT    /api/subcategorias/{id}
+DELETE /api/subcategorias/{id}
 ```
 
-### 13.7 Listas de precios
+### 13.7 Empresas y marcas
+
+```
+GET    /api/empresas
+POST   /api/empresas
+PUT    /api/empresas/{id}
+DELETE /api/empresas/{id}
+GET    /api/empresas/{id}/marcas
+POST   /api/marcas
+PUT    /api/marcas/{id}
+DELETE /api/marcas/{id}
+```
+
+### 13.8 Aumentos masivos de precio
+
+```
+POST   /api/aumentos/preview
+POST   /api/aumentos/aplicar
+```
+
+Permiten aumentar el precio de costo de productos
+filtrados por categoria, subcategoria, empresa o
+marca. El aumento puede ser por porcentaje o por
+monto fijo. El endpoint de preview muestra los
+productos afectados y los nuevos precios antes de
+confirmar. Al aplicar, se recalculan los precios de
+venta segun el margen de la categoria.
+
+### 13.9 Listas de precios
 
 ```
 GET    /api/listas-precios
@@ -1397,7 +1541,7 @@ DELETE /api/listas-precios/{id}
 PUT    /api/listas-precios/{id}/productos
 ```
 
-### 13.8 Stock
+### 13.10 Stock
 
 ```
 POST   /api/stock/ingreso
@@ -1406,7 +1550,7 @@ PUT    /api/stock/movimientos/{id}
 GET    /api/stock/movimientos
 ```
 
-### 13.9 Ventas
+### 13.11 Ventas
 
 ```
 POST   /api/ventas
@@ -1417,7 +1561,7 @@ POST   /api/ventas/{id}/anular
 GET    /api/ventas/{id}/ticket
 ```
 
-### 13.10 Devoluciones
+### 13.12 Devoluciones
 
 ```
 POST   /api/devoluciones
@@ -1426,7 +1570,7 @@ GET    /api/devoluciones/{id}
 POST   /api/devoluciones/cambio
 ```
 
-### 13.11 Notas de credito
+### 13.13 Notas de credito
 
 ```
 GET    /api/notas-credito
@@ -1435,7 +1579,7 @@ GET    /api/clientes/{id}/notas-credito
 POST   /api/notas-credito/{id}/usar
 ```
 
-### 13.12 Envios
+### 13.14 Envios
 
 ```
 GET    /api/envios
@@ -1445,7 +1589,7 @@ POST   /api/envios/{id}/pago
 GET    /api/envios/pendientes
 ```
 
-### 13.13 Clientes
+### 13.15 Clientes
 
 ```
 GET    /api/clientes
@@ -1456,7 +1600,7 @@ DELETE /api/clientes/{id}
 GET    /api/clientes/{id}/historial
 ```
 
-### 13.14 Campos custom de clientes
+### 13.16 Campos custom de clientes
 
 ```
 GET    /api/campos-custom
@@ -1465,7 +1609,7 @@ PUT    /api/campos-custom/{id}
 DELETE /api/campos-custom/{id}
 ```
 
-### 13.15 Proveedores
+### 13.17 Proveedores
 
 ```
 GET    /api/proveedores
@@ -1477,7 +1621,7 @@ GET    /api/proveedores/{id}/cuenta-corriente
 POST   /api/proveedores/{id}/importar-precios-csv
 ```
 
-### 13.16 Ordenes de compra
+### 13.18 Ordenes de compra
 
 ```
 POST   /api/ordenes-compra
@@ -1485,14 +1629,14 @@ GET    /api/ordenes-compra
 GET    /api/ordenes-compra/{id}
 ```
 
-### 13.17 Pagos a proveedores
+### 13.19 Pagos a proveedores
 
 ```
 POST   /api/proveedores/{id}/pagos
 GET    /api/proveedores/{id}/pagos
 ```
 
-### 13.18 Pedidos
+### 13.20 Pedidos
 
 ```
 POST   /api/pedidos/generar
@@ -1504,7 +1648,7 @@ PUT    /api/pedidos/{id}/estado
 GET    /api/pedidos/comparativa-proveedores
 ```
 
-### 13.19 Caja
+### 13.21 Caja
 
 ```
 POST   /api/caja/abrir
@@ -1515,7 +1659,7 @@ GET    /api/caja/historial
 GET    /api/caja/{id}
 ```
 
-### 13.20 Estadisticas
+### 13.22 Estadisticas
 
 ```
 GET    /api/estadisticas/ventas
@@ -1530,7 +1674,7 @@ GET    /api/estadisticas/alertas
 GET    /api/estadisticas/exportar
 ```
 
-### 13.21 Configuracion
+### 13.23 Configuracion
 
 ```
 GET    /api/configuracion/negocio
@@ -1553,14 +1697,14 @@ GET    /api/configuracion/redondeo
 PUT    /api/configuracion/redondeo
 ```
 
-### 13.22 Historial de precios
+### 13.24 Historial de precios
 
 ```
 GET    /api/historial-precios
 GET    /api/historial-precios/producto/{id}
 ```
 
-### 13.23 Auditoria
+### 13.25 Auditoria
 
 ```
 GET    /api/auditoria
