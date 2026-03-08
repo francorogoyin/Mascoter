@@ -267,6 +267,62 @@ Campos del producto:
 - Historial completo de movimientos por producto.
 - El historial es editable (corregir errores).
 
+### 5.6 Codigos de producto
+
+El sistema genera codigos automaticamente para productos
+nuevos, siguiendo criterios configurables:
+
+- **Criterio global por defecto:** se configura en
+  Configuracion. Opciones:
+  - **Secuencial numerico:** 0001, 0002, 0003...
+  - **Prefijo de categoria + secuencial:** el prefijo
+    se define por categoria (ej: Alimentos = 1xxx,
+    Accesorios = 2xxx). Si el ultimo producto de
+    Alimentos es 1234, el siguiente es 1235.
+  - **Manual:** el usuario ingresa el codigo a mano.
+- **Criterio por categoria:** cada categoria puede
+  sobreescribir el criterio global con su propio formato.
+  Ej: "Alimentos" usa prefijo "1" + secuencial de 3
+  digitos, "Accesorios" usa prefijo "2", etc.
+- Al crear un producto, el codigo se genera
+  automaticamente segun el criterio. El usuario puede
+  modificarlo antes de guardar.
+- Los codigos deben ser unicos en todo el sistema.
+
+### 5.7 Importacion y exportacion CSV
+
+**Exportar productos a CSV:**
+
+- Boton "Exportar CSV" en el listado de productos.
+- Exporta todos los productos (o los filtrados) con sus
+  columnas: codigo, nombre, categoria, precio costo,
+  precio venta, stock, stock minimo, tipo venta, activo.
+
+**Importar productos desde CSV:**
+
+- Boton "Importar CSV" en el listado de productos.
+- Flujo de importacion:
+  1. Subir archivo CSV.
+  2. **Pareo de columnas:** el sistema muestra las
+     columnas del CSV y pide al usuario que asocie cada
+     columna del CSV con un campo del sistema (codigo,
+     nombre, precio, etc.). No se asume el orden.
+  3. **Vista previa:** se muestran las primeras filas
+     con los datos mapeados para verificacion.
+  4. **Modo de importacion** (el usuario elige):
+     - Solo actualizar existentes (por codigo).
+     - Solo crear nuevos (codigos que no existen).
+     - Ambos: actualizar existentes y crear nuevos.
+  5. **Advertencia:** antes de confirmar, el sistema
+     muestra un resumen: X productos a actualizar,
+     Y productos a crear, Z filas ignoradas (errores).
+     El usuario confirma o cancela.
+  6. **Ejecucion:** se procesan los cambios. Se muestra
+     un log con resultados (exitosos y errores).
+- Para actualizar, se usa el **codigo de producto** como
+  clave de match. Solo se sobreescriben los campos que
+  vengan en el CSV.
+
 ---
 
 ## 6. Panel de clientes
@@ -494,7 +550,19 @@ Tarjetas de resumen rapido:
 - El costo de envio calculado se puede quitar o modificar
   manualmente en cada venta individual.
 
-### 10.8 Reglas de facturacion (fase posterior)
+### 10.8 Configuracion de codigos de producto
+
+- **Criterio global por defecto:**
+  - Secuencial numerico (0001, 0002...).
+  - Prefijo de categoria + secuencial.
+  - Manual (el usuario lo ingresa).
+- **Criterio por categoria:** cada categoria puede
+  definir su propio prefijo y formato, sobreescribiendo
+  el criterio global.
+- **Longitud del codigo:** configurable (ej: 4 digitos,
+  6 digitos).
+
+### 10.9 Reglas de facturacion (fase posterior)
 
 - Configurar que metodos de pago generan factura AFIP
   automaticamente.
@@ -521,6 +589,8 @@ Categorias
 ├── Id
 ├── Nombre
 ├── Descripcion
+├── Prefijo_Codigo (nullable, para codigos por categoria)
+├── Ultimo_Secuencial (default 0)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -783,6 +853,15 @@ Configuracion_Negocio
 ├── Cuit
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
+
+Configuracion_Codigos
+├── Id
+├── Criterio_Global (secuencial, prefijo_categoria,
+│   manual)
+├── Longitud_Codigo (default 4)
+├── Ultimo_Secuencial_Global (default 0)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
 ```
 
 ---
@@ -817,6 +896,9 @@ PUT    /api/productos/{id}
 DELETE /api/productos/{id}
 GET    /api/productos/{id}/movimientos-stock
 GET    /api/productos/stock-bajo
+GET    /api/productos/exportar-csv
+POST   /api/productos/importar-csv
+POST   /api/productos/importar-csv/preview
 ```
 
 ### 12.4 Categorias
