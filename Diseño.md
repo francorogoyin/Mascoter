@@ -727,6 +727,11 @@ volumen arbitrario (ej: 4,5 litros).
 - El sistema calcula el precio en base al costo por
   cc del liquido diluido * volumen + margen.
 - No se suma costo de envase (lo trae el cliente).
+- **Indicaciones de preparacion:** el POS muestra
+  cuanto concentrado y cuanta agua hay que poner.
+  Ej: para 4,5 lt de Quita Sarro (relacion 10:1):
+  - Concentrado: 4500 / 11 = 409 cc
+  - Agua: 4500 - 409 = 4091 cc (~4,1 lt)
 - El stock de concentrado se descuenta
   proporcionalmente.
 
