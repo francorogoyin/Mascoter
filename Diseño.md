@@ -15,14 +15,15 @@ El sistema se organiza en paneles accesibles desde una barra
 de navegacion lateral:
 
 1. **Ventas (POS)** - Punto de venta principal.
-2. **Productos** - CRUD de productos, categorias, stock.
-3. **Clientes** - Gestion de clientes y sus datos.
-4. **Proveedores** - Gestion de proveedores y cuentas
+2. **Envios** - Seguimiento de entregas pendientes.
+3. **Productos** - CRUD de productos, categorias, stock.
+4. **Clientes** - Gestion de clientes y sus datos.
+5. **Proveedores** - Gestion de proveedores y cuentas
    corrientes.
-5. **Caja** - Apertura, cierre y arqueo de caja diaria.
-6. **Estadisticas** - Dashboard con metricas y reportes.
-7. **Configuracion** - Usuarios, roles, metodos de pago,
-   datos del negocio.
+6. **Caja** - Apertura, cierre y arqueo de caja diaria.
+7. **Estadisticas** - Dashboard con metricas y reportes.
+8. **Configuracion** - Usuarios, roles, metodos de pago,
+   envios, datos del negocio.
 
 ---
 
@@ -98,8 +99,31 @@ Se pueden aplicar descuentos de varias formas:
 - Opcional: se puede vender sin cliente (consumidor final).
 - Al seleccionar un cliente, se aplican sus descuentos
   automaticamente.
+- **Obligatorio si es envio:** cuando se marca la venta
+  como envio, es obligatorio seleccionar un cliente. La
+  direccion y telefono se cargan automaticamente desde la
+  ficha del cliente.
 
-### 3.7 Cobro y cierre de venta
+### 3.7 Envio
+
+Antes de cobrar, se puede marcar la venta como envio:
+
+- **Toggle "Con envio"** en el carrito.
+- Al activar el envio:
+  - Se requiere seleccionar un cliente (obligatorio).
+  - Se carga automaticamente la direccion del cliente.
+  - Se puede ingresar una **direccion provisional** y un
+    **telefono alternativo** (ej: "hoy llevenla a lo de
+    mi cuñada").
+  - Se agrega el costo de envio al total segun la
+    configuracion (ver seccion 10.8).
+  - El costo de envio se puede quitar o modificar
+    manualmente en esa venta.
+  - Se puede seleccionar **"Paga en la casa"**: la venta
+    se registra pero el dinero NO ingresa a caja hasta
+    que el envio se marque como entregado y pagado.
+
+### 3.8 Cobro y cierre de venta
 
 Al presionar "Cobrar" se abre un modal con:
 
@@ -119,7 +143,7 @@ Al presionar "Cobrar" se abre un modal con:
   y tipos de tarjeta son todos configurables desde el
   panel de configuracion.
 
-### 3.8 Facturacion AFIP (fase posterior)
+### 3.9 Facturacion AFIP (fase posterior)
 
 - Configurable: definir que metodos de pago generan
   factura automaticamente (ej: solo tarjeta de credito).
@@ -127,7 +151,7 @@ Al presionar "Cobrar" se abre un modal con:
   electronicas.
 - Se implementa en una fase posterior al sistema base.
 
-### 3.9 Ticket/comprobante
+### 3.10 Ticket/comprobante
 
 Al confirmar la venta:
 
@@ -139,9 +163,58 @@ Al confirmar la venta:
 
 ---
 
-## 4. Panel de productos
+## 4. Panel de envios
 
-### 4.1 Listado de productos
+### 4.1 Listado de envios pendientes
+
+- Tabla con: numero de venta, cliente, direccion, monto
+  total, estado de pago, fecha.
+- Filtros por estado (Pendiente, Entregado, Cancelado).
+- Ordenado por fecha (mas antiguos primero por defecto).
+
+### 4.2 Estados del envio
+
+- **Pendiente:** el envio fue registrado pero no se
+  entrego todavia. Aparece en la lista de pendientes.
+- **Entregado:** el repartidor entrego y se confirma
+  en el sistema. Si tenia "Paga en la casa", al marcar
+  como entregado se registra el pago y el dinero ingresa
+  a caja.
+- **Cancelado:** el envio se cancela. Si la venta tenia
+  productos, se revierte el stock.
+
+### 4.3 Paga en la casa
+
+- Si la venta se marco como "Paga en la casa":
+  - La venta queda registrada pero sin ingreso a caja.
+  - Al marcar como "Entregado" se abre un modal de cobro
+    (igual que el cobro normal: efectivo, transferencia,
+    tarjeta, pago mixto).
+  - Se puede registrar **pago parcial**: el monto pagado
+    ingresa a caja, y el restante queda como pendiente
+    en el envio (no se marca como entregado hasta que se
+    pague todo, o se decide cancelar el faltante).
+  - El envio muestra claramente cuanto se pago y cuanto
+    falta.
+- Si la venta ya fue pagada al momento de la compra (no
+  es "Paga en la casa"), al marcar como entregado
+  simplemente se cierra el envio.
+
+### 4.4 Detalle del envio
+
+- Datos del cliente (nombre, telefono).
+- Direccion de entrega (del cliente o provisional).
+- Telefono alternativo (si se ingreso uno).
+- Lista de productos de la venta.
+- Monto total.
+- Estado de pago (pagado, pendiente, parcial).
+- Notas adicionales.
+
+---
+
+## 5. Panel de productos
+
+### 5.1 Listado de productos
 
 - Tabla con columnas: nombre, categoria, precio venta,
   stock actual, estado.
@@ -149,7 +222,7 @@ Al confirmar la venta:
 - Indicadores visuales de stock bajo (color rojo/amarillo).
 - Paginacion.
 
-### 4.2 Formulario de producto
+### 5.2 Formulario de producto
 
 Campos del producto:
 
@@ -168,13 +241,13 @@ Campos del producto:
 - **Tipo de venta:** unidad o granel (kg, litro, etc.).
 - **Activo/Inactivo.**
 
-### 4.3 Categorias
+### 5.3 Categorias
 
 - CRUD de categorias con nombre y descripcion.
 - Un producto pertenece a una categoria.
 - Ejemplos: Alimentos, Accesorios, Higiene, Medicamentos.
 
-### 4.4 Listas de precios
+### 5.4 Listas de precios
 
 - Por defecto existe una lista "General" (precio de venta
   principal).
@@ -183,7 +256,7 @@ Campos del producto:
 - Al vender, se puede seleccionar que lista de precios
   usar.
 
-### 4.5 Movimientos de stock
+### 5.5 Movimientos de stock
 
 - **Ingreso:** compra a proveedor, devolucion de cliente,
   ajuste positivo.
@@ -196,14 +269,14 @@ Campos del producto:
 
 ---
 
-## 5. Panel de clientes
+## 6. Panel de clientes
 
-### 5.1 Listado de clientes
+### 6.1 Listado de clientes
 
 - Tabla con: nombre, telefono, email, ultima compra.
 - Buscador por nombre, telefono o email.
 
-### 5.2 Ficha de cliente
+### 6.2 Ficha de cliente
 
 Campos fijos:
 
@@ -219,7 +292,7 @@ Campos personalizables:
   de forma global (ej: "Veterinario", "Alergias de
   mascota", "Fecha de cumpleaños").
 
-### 5.3 Descuento de cliente
+### 6.3 Descuento de cliente
 
 - Cada cliente puede tener un descuento predeterminado:
   - Por porcentaje (ej: 10% en todas las compras).
@@ -228,7 +301,7 @@ Campos personalizables:
 - Se aplica automaticamente al seleccionarlo en una venta.
 - Se puede anular o modificar en cada venta individual.
 
-### 5.4 Historial de compras
+### 6.4 Historial de compras
 
 - Lista de todas las ventas asociadas al cliente.
 - Total gastado, cantidad de compras, promedio por compra.
@@ -236,14 +309,14 @@ Campos personalizables:
 
 ---
 
-## 6. Panel de proveedores
+## 7. Panel de proveedores
 
-### 6.1 Listado de proveedores
+### 7.1 Listado de proveedores
 
 - Tabla con: nombre, telefono, saldo cuenta corriente.
 - Buscador por nombre.
 
-### 6.2 Ficha de proveedor
+### 7.2 Ficha de proveedor
 
 - **Nombre/razon social** (obligatorio).
 - **Telefono.**
@@ -254,7 +327,7 @@ Campos personalizables:
 - **Productos que provee:** asociacion con productos
   del catalogo.
 
-### 6.3 Ordenes de compra
+### 7.3 Ordenes de compra
 
 - Registrar compras al proveedor: fecha, productos,
   cantidades, precios, total.
@@ -263,7 +336,7 @@ Campos personalizables:
 - Historial de compras por proveedor.
 - Total gastado con cada proveedor.
 
-### 6.4 Cuenta corriente
+### 7.4 Cuenta corriente
 
 - Saldo actual con el proveedor (lo que se debe o lo
   que hay a favor).
@@ -273,23 +346,23 @@ Campos personalizables:
 
 ---
 
-## 7. Panel de caja
+## 8. Panel de caja
 
-### 7.1 Apertura de caja
+### 8.1 Apertura de caja
 
 - Boton "Abrir caja" con campo de monto inicial en
   efectivo.
 - Registra quien abrio la caja y a que hora.
 - Solo se puede vender con la caja abierta.
 
-### 7.2 Durante la jornada
+### 8.2 Durante la jornada
 
 - Todas las ventas en efectivo se suman a la caja.
 - Se pueden registrar egresos manuales (ej: pago a
   proveedor en efectivo, retiro de efectivo).
 - Se pueden registrar ingresos manuales (ej: prestamo).
 
-### 7.3 Cierre de caja
+### 8.3 Cierre de caja
 
 - Boton "Cerrar caja."
 - Se muestra:
@@ -303,7 +376,7 @@ Campos personalizables:
 - Se guarda el cierre con todos los datos y la
   diferencia.
 
-### 7.4 Historial de cajas
+### 8.4 Historial de cajas
 
 - Lista de todas las cajas con: fecha, usuario, monto
   inicial, monto final, diferencia.
@@ -311,9 +384,9 @@ Campos personalizables:
 
 ---
 
-## 8. Panel de estadisticas
+## 9. Panel de estadisticas
 
-### 8.1 Dashboard principal
+### 9.1 Dashboard principal
 
 Tarjetas de resumen rapido:
 
@@ -323,7 +396,7 @@ Tarjetas de resumen rapido:
 - Margen de ganancia promedio.
 - Productos con stock critico.
 
-### 8.2 Graficos
+### 9.2 Graficos
 
 - **Ventas por periodo:** grafico de lineas o barras
   (diario, semanal, mensual). Comparativa entre periodos.
@@ -333,7 +406,7 @@ Tarjetas de resumen rapido:
 - **Ingresos vs costos:** comparativa para ver margen.
 - **Ventas por metodo de pago:** distribucion.
 
-### 8.3 Metricas avanzadas
+### 9.3 Metricas avanzadas
 
 - **Rendimiento por vendedor:** ventas totales, cantidad
   de operaciones, ticket promedio por vendedor.
@@ -344,13 +417,13 @@ Tarjetas de resumen rapido:
 - **Tendencias:** comparativa mes a mes, deteccion de
   crecimiento o caida.
 
-### 8.4 Alertas
+### 9.4 Alertas
 
 - Productos por debajo del stock minimo.
 - Productos sin ventas en los ultimos X dias.
 - Cuentas corrientes con deuda alta.
 
-### 8.5 Exportacion
+### 9.5 Exportacion
 
 - Exportar cualquier reporte a CSV.
 - Exportar a PDF.
@@ -358,9 +431,9 @@ Tarjetas de resumen rapido:
 
 ---
 
-## 9. Panel de configuracion
+## 10. Panel de configuracion
 
-### 9.1 Usuarios y roles
+### 10.1 Usuarios y roles
 
 - CRUD de usuarios del sistema.
 - Roles:
@@ -370,33 +443,33 @@ Tarjetas de resumen rapido:
     estadisticas completas.
 - Cada usuario tiene: nombre, email, contraseña, rol.
 
-### 9.2 Metodos de pago
+### 10.2 Metodos de pago
 
 - CRUD de metodos de pago (efectivo, transferencia,
   tarjeta credito, tarjeta debito, etc.).
 - Activar/desactivar metodos.
 
-### 9.3 Cuentas de transferencia
+### 10.3 Cuentas de transferencia
 
 - CRUD de cuentas destino para transferencias.
 - Campos: nombre, entidad (Mercado Pago, banco, etc.),
   alias/CBU, titular.
 - Ej: "Patricio (Mercado Pago)", "Sergio (Mercado Pago)".
 
-### 9.4 Terminales de pago (posnet)
+### 10.4 Terminales de pago (posnet)
 
 - CRUD de terminales.
 - Campos: nombre/numero, ubicacion, proveedor.
 - Ej: "Terminal 1", "Terminal 2".
 
-### 9.5 Tipos de tarjeta
+### 10.5 Tipos de tarjeta
 
 - CRUD de tipos de tarjeta.
 - Por defecto: VISA, MasterCard, Naranja, American
   Express, Cabal.
 - Se pueden agregar o desactivar.
 
-### 9.6 Datos del negocio
+### 10.6 Datos del negocio
 
 - Nombre del negocio.
 - Direccion.
@@ -404,7 +477,24 @@ Tarjetas de resumen rapido:
 - Logo (para tickets).
 - CUIT (para facturacion futura).
 
-### 9.7 Reglas de facturacion (fase posterior)
+### 10.7 Configuracion de envios
+
+- **Costo de envio:** configurable con varias modalidades:
+  - **Exacto:** un monto fijo (ej: $1.500 siempre).
+  - **Incremental:** monto base + adicional por distancia
+    o zona (si se implementan zonas).
+  - **Gratis a partir de monto:** no se cobra envio si
+    el total de la venta supera un umbral configurable
+    (ej: gratis a partir de $25.000).
+  - **Gratis hasta monto:** se cobra envio solo si el
+    total supera cierto monto.
+- **Envio gratis por cliente:** en la ficha del cliente
+  se puede marcar "envio gratis siempre". Esto tiene
+  prioridad sobre las reglas de monto.
+- El costo de envio calculado se puede quitar o modificar
+  manualmente en cada venta individual.
+
+### 10.8 Reglas de facturacion (fase posterior)
 
 - Configurar que metodos de pago generan factura AFIP
   automaticamente.
@@ -412,9 +502,9 @@ Tarjetas de resumen rapido:
 
 ---
 
-## 10. Modelo de datos
+## 11. Modelo de datos
 
-### 10.1 Entidades principales
+### 11.1 Entidades principales
 
 ```
 Usuarios
@@ -474,6 +564,7 @@ Clientes
 ├── Notas
 ├── Tipo_Descuento (ninguno, porcentaje, monto, al_costo)
 ├── Valor_Descuento
+├── Envio_Gratis (booleano, default false)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -582,9 +673,37 @@ Ventas
 ├── Subtotal
 ├── Tipo_Descuento (ninguno, porcentaje, monto, al_costo)
 ├── Valor_Descuento
+├── Costo_Envio (default 0)
 ├── Total
+├── Es_Envio (booleano, default false)
+├── Paga_En_Casa (booleano, default false)
 ├── Estado (completada, anulada)
 ├── Id_Caja (FK)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Envios
+├── Id
+├── Id_Venta (FK)
+├── Direccion_Entrega
+├── Telefono_Alternativo (nullable)
+├── Notas
+├── Estado (pendiente, entregado, cancelado)
+├── Monto_Pagado (default 0, para pagos parciales)
+├── Monto_Pendiente
+├── Fecha_Entrega (nullable)
+├── Id_Usuario_Entrega (FK, nullable)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Configuracion_Envio
+├── Id
+├── Tipo_Costo (exacto, incremental, gratis_desde,
+│   gratis_hasta)
+├── Monto_Base
+├── Monto_Umbral (nullable, para reglas de monto)
+├── Monto_Adicional (nullable, para incremental)
+├── Activo
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -668,9 +787,9 @@ Configuracion_Negocio
 
 ---
 
-## 11. API - Endpoints principales
+## 12. API - Endpoints principales
 
-### 11.1 Autenticacion
+### 12.1 Autenticacion
 
 ```
 POST   /api/auth/login
@@ -678,7 +797,7 @@ POST   /api/auth/registro
 GET    /api/auth/perfil
 ```
 
-### 11.2 Usuarios
+### 12.2 Usuarios
 
 ```
 GET    /api/usuarios
@@ -688,7 +807,7 @@ PUT    /api/usuarios/{id}
 DELETE /api/usuarios/{id}
 ```
 
-### 11.3 Productos
+### 12.3 Productos
 
 ```
 GET    /api/productos
@@ -700,7 +819,7 @@ GET    /api/productos/{id}/movimientos-stock
 GET    /api/productos/stock-bajo
 ```
 
-### 11.4 Categorias
+### 12.4 Categorias
 
 ```
 GET    /api/categorias
@@ -709,7 +828,7 @@ PUT    /api/categorias/{id}
 DELETE /api/categorias/{id}
 ```
 
-### 11.5 Listas de precios
+### 12.5 Listas de precios
 
 ```
 GET    /api/listas-precios
@@ -719,7 +838,7 @@ DELETE /api/listas-precios/{id}
 PUT    /api/listas-precios/{id}/productos
 ```
 
-### 11.6 Stock
+### 12.6 Stock
 
 ```
 POST   /api/stock/ingreso
@@ -728,7 +847,7 @@ PUT    /api/stock/movimientos/{id}
 GET    /api/stock/movimientos
 ```
 
-### 11.7 Ventas
+### 12.7 Ventas
 
 ```
 POST   /api/ventas
@@ -738,7 +857,17 @@ POST   /api/ventas/{id}/anular
 GET    /api/ventas/{id}/ticket
 ```
 
-### 11.8 Clientes
+### 12.8 Envios
+
+```
+GET    /api/envios
+GET    /api/envios/{id}
+PUT    /api/envios/{id}/estado
+POST   /api/envios/{id}/pago
+GET    /api/envios/pendientes
+```
+
+### 12.9 Clientes
 
 ```
 GET    /api/clientes
@@ -749,7 +878,7 @@ DELETE /api/clientes/{id}
 GET    /api/clientes/{id}/historial
 ```
 
-### 11.9 Campos custom de clientes
+### 12.10 Campos custom de clientes
 
 ```
 GET    /api/campos-custom
@@ -758,7 +887,7 @@ PUT    /api/campos-custom/{id}
 DELETE /api/campos-custom/{id}
 ```
 
-### 11.10 Proveedores
+### 12.11 Proveedores
 
 ```
 GET    /api/proveedores
@@ -769,7 +898,7 @@ DELETE /api/proveedores/{id}
 GET    /api/proveedores/{id}/cuenta-corriente
 ```
 
-### 11.11 Ordenes de compra
+### 12.12 Ordenes de compra
 
 ```
 POST   /api/ordenes-compra
@@ -777,14 +906,14 @@ GET    /api/ordenes-compra
 GET    /api/ordenes-compra/{id}
 ```
 
-### 11.12 Pagos a proveedores
+### 12.13 Pagos a proveedores
 
 ```
 POST   /api/proveedores/{id}/pagos
 GET    /api/proveedores/{id}/pagos
 ```
 
-### 11.13 Caja
+### 12.14 Caja
 
 ```
 POST   /api/caja/abrir
@@ -795,7 +924,7 @@ GET    /api/caja/historial
 GET    /api/caja/{id}
 ```
 
-### 11.14 Estadisticas
+### 12.15 Estadisticas
 
 ```
 GET    /api/estadisticas/ventas
@@ -810,7 +939,7 @@ GET    /api/estadisticas/alertas
 GET    /api/estadisticas/exportar
 ```
 
-### 11.15 Configuracion
+### 12.16 Configuracion
 
 ```
 GET    /api/configuracion/negocio
@@ -831,9 +960,9 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
 
 ---
 
-## 12. Integraciones futuras (fases posteriores)
+## 13. Integraciones futuras (fases posteriores)
 
-### 12.1 Mercado Pago
+### 13.1 Mercado Pago
 
 - Integracion con API de Mercado Pago para verificar
   transferencias entrantes.
@@ -841,7 +970,7 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
   automaticamente la venta.
 - Webhook para notificaciones en tiempo real.
 
-### 12.2 AFIP - Facturacion electronica
+### 13.2 AFIP - Facturacion electronica
 
 - Integracion con web services de AFIP.
 - Emision de facturas A, B y C.
@@ -851,7 +980,7 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
 
 ---
 
-## 13. Seguridad
+## 14. Seguridad
 
 - Autenticacion con JWT (access + refresh tokens).
 - Contraseñas hasheadas con bcrypt.
@@ -863,7 +992,7 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
 
 ---
 
-## 14. Consideraciones de UX
+## 15. Consideraciones de UX
 
 - Interfaz responsive (funciona en PC y tablet).
 - Navegacion lateral colapsable.
