@@ -522,19 +522,24 @@ Al vender una fraccion o granel, el stock del
 paquete/lote origen se consume entero. Un lote
 abierto ya no es un lote completo:
 
-- Ej: Stock de "Lote x24" = 1, se vende 1 unidad
-  de "Papel Higienico Unidad".
-- El sistema descuenta 1 lote completo del stock
-  (queda en 0) y carga las 23 unidades restantes
-  al stock de la variante fraccionada.
 - Si ya hay stock fraccionado disponible (ej: 5
   unidades sueltas de una apertura anterior), se
   venden de ahi sin abrir otro lote.
-- Solo se abre un lote nuevo cuando el stock
-  fraccionado no alcanza para cubrir la venta.
-- Aplica igual para granel: vender 1 kg de Rosco
-  Suelto abre una bolsa entera y carga el resto
-  (ej: 19 kg) al stock de granel.
+- Si el stock fraccionado no alcanza, el sistema
+  pregunta al vendedor: **"¿Abrir un lote/bolsa?"**
+  - **Si:** se descuenta 1 lote del stock y las
+    unidades restantes se cargan al stock
+    fraccionado. Ej: se vende 1 unidad, el lote
+    x24 baja a 0, aparecen 23 unidades sueltas.
+  - **No:** la venta se realiza igual, pero no se
+    descuenta stock del lote. Util cuando el
+    producto existe fisicamente pero no esta
+    cargado en stock (ej: unidad encontrada fuera
+    de lugar, stock no actualizado). La venta
+    queda registrada y el movimiento de stock se
+    puede ajustar despues manualmente.
+- Aplica igual para granel: si no hay stock suelto,
+  pregunta si abrir una bolsa.
 
 **Variante origen para fraccionamiento:**
 
