@@ -521,12 +521,23 @@ segun el proveedor que lo suministra:
 - Un producto pertenece a una categoria y
   opcionalmente a una subcategoria.
 - **Margen de ganancia por categoria:** cada categoria
-  tiene un margen de ganancia configurable (ej: 40%).
+  tiene margenes configurables por tipo de venta:
+  - **Margen unidad** (ej: 30%) - para productos/
+    variantes vendidos por unidad (bolsa, paquete).
+  - **Margen granel** (ej: 50%) - para productos/
+    variantes vendidos a granel (kg, litro).
   Al cargar un producto, el precio de venta se calcula
-  automaticamente como costo + margen de la categoria.
-  Se puede sobreescribir manualmente por producto.
-- Si una subcategoria tiene su propio margen definido,
-  este tiene prioridad sobre el de la categoria padre.
+  automaticamente como costo + margen segun su tipo
+  de venta.
+- Si una subcategoria tiene sus propios margenes
+  definidos, estos tienen prioridad sobre los de la
+  categoria padre.
+- **Margen por producto:** cada producto/variante
+  puede sobreescribir el margen con un valor propio.
+- **Jerarquia de prioridad:**
+  1. Margen del producto/variante (si tiene).
+  2. Margen de la subcategoria (si tiene).
+  3. Margen de la categoria.
 
 ### 5.6 Empresas y marcas
 
@@ -1246,7 +1257,8 @@ Categorias
 ├── Id
 ├── Nombre
 ├── Descripcion
-├── Margen_Ganancia (nullable, ej: 40.0)
+├── Margen_Unidad (nullable, ej: 30.0)
+├── Margen_Granel (nullable, ej: 50.0)
 ├── Prefijo_Codigo (nullable, para codigos por categoria)
 ├── Ultimo_Secuencial (default 0)
 ├── Fecha_Creacion
@@ -1257,7 +1269,8 @@ Subcategorias
 ├── Id_Categoria (FK)
 ├── Nombre
 ├── Descripcion
-├── Margen_Ganancia (nullable, sobreescribe categoria)
+├── Margen_Unidad (nullable, sobreescribe categoria)
+├── Margen_Granel (nullable, sobreescribe categoria)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -1304,6 +1317,7 @@ Productos
 ├── Id_Subcategoria (FK, nullable)
 ├── Id_Empresa (FK, nullable)
 ├── Id_Marca (FK, nullable)
+├── Margen_Ganancia (nullable, sobreescribe jerarquia)
 ├── Es_Quimico (booleano, default false)
 ├── Costo_Concentrado_Litro (nullable, solo quimicos)
 ├── Relacion_Dilucion (nullable, el X de X:1)
