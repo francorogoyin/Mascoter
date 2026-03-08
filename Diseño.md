@@ -172,7 +172,7 @@ Antes de cobrar, se puede marcar la venta como envio:
   - Se requiere seleccionar un cliente (obligatorio).
   - Se carga automaticamente la direccion del cliente.
   - Se puede ingresar una **direccion provisional** y un
-    **telefono alternativo** (ej: "hoy llevenla a lo de
+    **telefono alternativo** (ej: "Hoy llevenla a lo de
     mi cuñada").
   - Se agrega el costo de envio al total segun la
     configuracion (ver seccion 10.8).
@@ -219,6 +219,87 @@ Al confirmar la venta:
 - Boton "Enviar" con opciones:
   - Enviar PDF por WhatsApp.
   - Enviar PDF por email.
+
+### 3.13 Editar venta
+
+Una venta ya cerrada se puede editar:
+
+- Desde el historial de ventas, boton "Editar".
+- Se pueden quitar items, modificar cantidades o cambiar
+  precios. Al guardar, se ajusta el stock y el total.
+- Si la venta tenia un pago ya registrado, se recalcula
+  la diferencia (a favor del cliente o del negocio).
+- Se registra en el log de auditoria quien edito, que
+  cambio y cuando.
+
+### 3.14 Devoluciones y cambios
+
+Accesible desde el historial de ventas o desde un boton
+"Devolucion" en el POS:
+
+**Devolucion:**
+
+- Se busca la venta original (por numero, fecha o
+  cliente).
+- Se seleccionan los productos a devolver y la cantidad.
+- Se elige la resolucion:
+  - **Reembolso:** se devuelve el dinero al cliente
+    (efectivo, transferencia, etc.).
+  - **Nota de credito:** se genera un saldo a favor
+    del cliente que puede usar en futuras compras.
+- El stock de los productos devueltos se reingresa
+  automaticamente.
+- Queda vinculada a la venta original.
+
+**Cambio:**
+
+- El cliente trae uno o mas productos y se lleva otros.
+- Flujo:
+  1. Se selecciona la venta original y los productos
+     que el cliente devuelve.
+  2. Se agregan al carrito los productos nuevos que
+     se lleva.
+  3. Se calcula la diferencia:
+     - Si los productos nuevos cuestan mas, el cliente
+       paga la diferencia (se abre modal de cobro
+       normal).
+     - Si los productos nuevos cuestan menos, la
+       diferencia queda como nota de credito o se
+       reembolsa.
+     - Si es igual, se cierra sin cobro.
+  4. Se ajusta el stock de ambos lados (ingreso de lo
+     devuelto, egreso de lo nuevo).
+- Queda registrado como devolucion con tipo "cambio",
+  vinculada a la venta original.
+
+### 3.15 Recargos por metodo de pago
+
+- Cada metodo de pago puede tener un recargo
+  configurable (ej: tarjeta de credito +10%).
+- El recargo se configura en el panel de configuracion
+  (ver seccion 11.2).
+- Al seleccionar el metodo de pago en el modal de cobro,
+  el recargo se aplica automaticamente al total.
+- El vendedor puede quitar o modificar el recargo
+  manualmente en esa venta especifica.
+- Si el pago es mixto, cada metodo aplica su propio
+  recargo sobre la porcion correspondiente.
+- El ticket muestra el desglose: subtotal, recargo por
+  metodo de pago, total final.
+
+### 3.16 Lector de codigo de barras
+
+- El lector de codigo de barras funciona como un
+  teclado: escribe el codigo en el campo de busqueda.
+- Al detectar un codigo completo (Enter del lector),
+  el sistema busca el producto y lo agrega
+  automaticamente al carrito (1 unidad).
+- Si el producto tiene variantes, se agrega la variante
+  que coincide con el codigo escaneado.
+- Escaneos sucesivos del mismo codigo incrementan la
+  cantidad en el carrito.
+- Si el codigo no existe, se muestra un aviso y se
+  ofrece crear el producto con ese codigo.
 
 ---
 
@@ -605,7 +686,21 @@ automaticamente:
   proveedor en efectivo, retiro de efectivo).
 - Se pueden registrar ingresos manuales (ej: prestamo).
 
-### 9.3 Cierre de caja
+### 9.3 Apertura y cierre automatico
+
+- Se puede configurar un horario de apertura automatica
+  de caja (ej: todos los dias a las 8:00). El sistema
+  abre la caja con el monto inicial configurado.
+- Se puede configurar un horario de cierre automatico
+  (ej: todos los dias a las 21:00). El sistema cierra
+  la caja y registra el monto esperado. El arqueo
+  queda pendiente para que el usuario lo complete.
+- Si la caja ya esta abierta/cerrada al momento del
+  horario automatico, no se duplica la accion.
+- Los horarios se configuran en el panel de
+  configuracion.
+
+### 9.4 Cierre de caja
 
 - Boton "Cerrar caja."
 - Se muestra:
@@ -619,7 +714,7 @@ automaticamente:
 - Se guarda el cierre con todos los datos y la
   diferencia.
 
-### 9.4 Historial de cajas
+### 9.5 Historial de cajas
 
 - Lista de todas las cajas con: fecha, usuario, monto
   inicial, monto final, diferencia.
@@ -691,6 +786,14 @@ Tarjetas de resumen rapido:
 - CRUD de metodos de pago (efectivo, transferencia,
   tarjeta credito, tarjeta debito, etc.).
 - Activar/desactivar metodos.
+- **Recargo por metodo:** cada metodo puede tener un
+  recargo configurable:
+  - Por porcentaje (ej: +10% tarjeta credito).
+  - Por monto fijo (ej: +$500).
+  - Sin recargo (por defecto).
+- El recargo se aplica automaticamente al cobrar con
+  ese metodo, pero el vendedor puede quitarlo o
+  modificarlo en cada venta individual.
 
 ### 11.3 Cuentas de transferencia
 
@@ -749,7 +852,20 @@ Tarjetas de resumen rapido:
 - **Longitud del codigo:** configurable (ej: 4 digitos,
   6 digitos).
 
-### 11.9 Reglas de facturacion (fase posterior)
+### 11.9 Configuracion de caja automatica
+
+- **Hora de apertura automatica:** horario en que el
+  sistema abre la caja automaticamente (ej: 08:00).
+- **Hora de cierre automatico:** horario en que el
+  sistema cierra la caja automaticamente (ej: 21:00).
+  El arqueo queda pendiente para completar despues.
+- **Monto inicial automatico:** monto con el que se
+  abre la caja automaticamente (default 0).
+- Se puede activar/desactivar la funcion.
+- Si la caja ya esta abierta/cerrada al momento del
+  horario, no se duplica la accion.
+
+### 11.10 Reglas de facturacion (fase posterior)
 
 - Configurar que metodos de pago generan factura AFIP
   automaticamente.
@@ -893,13 +1009,6 @@ Proveedores
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
-Productos_Proveedores
-├── Id
-├── Id_Producto (FK)
-├── Id_Proveedor (FK)
-├── Fecha_Creacion
-└── Fecha_Actualizacion
-
 Ordenes_Compra
 ├── Id
 ├── Id_Proveedor (FK)
@@ -934,6 +1043,8 @@ Movimientos_Cuenta_Corriente
 Metodos_Pago
 ├── Id
 ├── Nombre
+├── Tipo_Recargo (ninguno, porcentaje, monto)
+├── Valor_Recargo (default 0)
 ├── Activo
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
@@ -968,6 +1079,7 @@ Ventas
 ├── Fecha
 ├── Id_Cliente (FK, nullable)
 ├── Id_Usuario (FK)
+├── Id_Lista_Precio (FK, nullable)
 ├── Subtotal
 ├── Tipo_Descuento (ninguno, porcentaje, monto, al_costo)
 ├── Valor_Descuento
@@ -1028,6 +1140,9 @@ Pagos_Venta
 ├── Id_Tipo_Tarjeta (FK, nullable)
 ├── Monto_Recibido (nullable, para efectivo)
 ├── Vuelto (nullable, para efectivo)
+├── Tipo_Recargo (ninguno, porcentaje, monto)
+├── Valor_Recargo (default 0)
+├── Monto_Recargo (monto calculado del recargo)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
@@ -1088,6 +1203,73 @@ Configuracion_Codigos
 │   manual)
 ├── Longitud_Codigo (default 4)
 ├── Ultimo_Secuencial_Global (default 0)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Devoluciones
+├── Id
+├── Id_Venta_Original (FK)
+├── Id_Venta_Cambio (FK, nullable, si es cambio)
+├── Tipo (devolucion, cambio)
+├── Resolucion (reembolso, nota_credito, cambio)
+├── Monto_Devuelto
+├── Monto_Diferencia (nullable, para cambios)
+├── Notas
+├── Id_Usuario (FK)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Detalles_Devolucion
+├── Id
+├── Id_Devolucion (FK)
+├── Id_Producto (FK)
+├── Cantidad
+├── Precio_Unitario
+├── Subtotal
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Notas_Credito
+├── Id
+├── Id_Cliente (FK)
+├── Id_Devolucion (FK)
+├── Monto_Original
+├── Monto_Usado (default 0)
+├── Monto_Restante
+├── Activa (booleano, default true)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Historial_Precios
+├── Id
+├── Id_Producto (FK)
+├── Tipo_Precio (costo, venta, lista, proveedor)
+├── Id_Lista_Precio (FK, nullable)
+├── Id_Proveedor (FK, nullable)
+├── Precio_Anterior
+├── Precio_Nuevo
+├── Id_Usuario (FK)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Log_Auditoria
+├── Id
+├── Id_Usuario (FK)
+├── Accion (crear, editar, eliminar, anular, etc.)
+├── Entidad (producto, venta, cliente, stock, etc.)
+├── Id_Entidad
+├── Datos_Anteriores (JSON, nullable)
+├── Datos_Nuevos (JSON, nullable)
+├── Ip (nullable)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Configuracion_Caja
+├── Id
+├── Hora_Apertura_Auto (nullable, ej: "08:00")
+├── Hora_Cierre_Auto (nullable, ej: "21:00")
+├── Monto_Inicial_Auto (default 0)
+├── Activo (booleano, default false)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 ```
@@ -1186,11 +1368,30 @@ GET    /api/stock/movimientos
 POST   /api/ventas
 GET    /api/ventas
 GET    /api/ventas/{id}
+PUT    /api/ventas/{id}
 POST   /api/ventas/{id}/anular
 GET    /api/ventas/{id}/ticket
 ```
 
-### 13.10 Envios
+### 13.10 Devoluciones
+
+```
+POST   /api/devoluciones
+GET    /api/devoluciones
+GET    /api/devoluciones/{id}
+POST   /api/devoluciones/cambio
+```
+
+### 13.11 Notas de credito
+
+```
+GET    /api/notas-credito
+GET    /api/notas-credito/{id}
+GET    /api/clientes/{id}/notas-credito
+POST   /api/notas-credito/{id}/usar
+```
+
+### 13.12 Envios
 
 ```
 GET    /api/envios
@@ -1200,7 +1401,7 @@ POST   /api/envios/{id}/pago
 GET    /api/envios/pendientes
 ```
 
-### 13.11 Clientes
+### 13.13 Clientes
 
 ```
 GET    /api/clientes
@@ -1211,7 +1412,7 @@ DELETE /api/clientes/{id}
 GET    /api/clientes/{id}/historial
 ```
 
-### 13.12 Campos custom de clientes
+### 13.14 Campos custom de clientes
 
 ```
 GET    /api/campos-custom
@@ -1220,7 +1421,7 @@ PUT    /api/campos-custom/{id}
 DELETE /api/campos-custom/{id}
 ```
 
-### 13.13 Proveedores
+### 13.15 Proveedores
 
 ```
 GET    /api/proveedores
@@ -1232,7 +1433,7 @@ GET    /api/proveedores/{id}/cuenta-corriente
 POST   /api/proveedores/{id}/importar-precios-csv
 ```
 
-### 13.14 Ordenes de compra
+### 13.16 Ordenes de compra
 
 ```
 POST   /api/ordenes-compra
@@ -1240,14 +1441,14 @@ GET    /api/ordenes-compra
 GET    /api/ordenes-compra/{id}
 ```
 
-### 13.15 Pagos a proveedores
+### 13.17 Pagos a proveedores
 
 ```
 POST   /api/proveedores/{id}/pagos
 GET    /api/proveedores/{id}/pagos
 ```
 
-### 13.16 Pedidos
+### 13.18 Pedidos
 
 ```
 POST   /api/pedidos/generar
@@ -1259,7 +1460,7 @@ PUT    /api/pedidos/{id}/estado
 GET    /api/pedidos/comparativa-proveedores
 ```
 
-### 13.17 Caja
+### 13.19 Caja
 
 ```
 POST   /api/caja/abrir
@@ -1270,7 +1471,7 @@ GET    /api/caja/historial
 GET    /api/caja/{id}
 ```
 
-### 13.18 Estadisticas
+### 13.20 Estadisticas
 
 ```
 GET    /api/estadisticas/ventas
@@ -1285,7 +1486,7 @@ GET    /api/estadisticas/alertas
 GET    /api/estadisticas/exportar
 ```
 
-### 13.19 Configuracion
+### 13.21 Configuracion
 
 ```
 GET    /api/configuracion/negocio
@@ -1302,6 +1503,22 @@ PUT    /api/configuracion/terminales/{id}
 GET    /api/configuracion/tipos-tarjeta
 POST   /api/configuracion/tipos-tarjeta
 PUT    /api/configuracion/tipos-tarjeta/{id}
+GET    /api/configuracion/caja
+PUT    /api/configuracion/caja
+```
+
+### 13.22 Historial de precios
+
+```
+GET    /api/historial-precios
+GET    /api/historial-precios/producto/{id}
+```
+
+### 13.23 Auditoria
+
+```
+GET    /api/auditoria
+GET    /api/auditoria/{entidad}/{id}
 ```
 
 ---
@@ -1347,3 +1564,12 @@ PUT    /api/configuracion/tipos-tarjeta/{id}
   y error).
 - Carga lazy de datos pesados.
 - Busqueda en tiempo real con debounce.
+- **Modo offline / resiliencia:** si se cae la conexion
+  al backend, el POS guarda las ventas en una cola
+  local (localStorage/IndexedDB) y las sincroniza
+  automaticamente cuando se restablece la conexion.
+  Se muestra un indicador visual de estado offline.
+- **Notificaciones en tiempo real:** WebSockets para
+  alertas de stock bajo, envios pendientes, caja sin
+  cerrar, y cambios realizados por otros usuarios.
+  Util cuando hay varios vendedores simultaneos.
