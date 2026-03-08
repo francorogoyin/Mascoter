@@ -736,10 +736,12 @@ Campos personalizables:
 
 ## 8. Panel de pedidos
 
-El panel tiene tres pestañas:
+El panel tiene cuatro pestañas:
 
 - **Nuevo pedido (+):** crear un pedido manual o
   automatico.
+- **Stock critico:** productos con stock bajo o sin
+  stock, ordenados por relevancia.
 - **Pendientes:** pedidos enviados que aun no llegaron.
 - **Historial:** pedidos completados o cancelados.
 
@@ -762,7 +764,10 @@ Boton "+" para armar un pedido desde cero:
    - Campo de cantidad a pedir.
 3. **Total estimado:** se va sumando el total a medida
    que se agregan productos.
-4. **Guardar pedido:** se guarda con estado "Pendiente"
+4. **Enviar pedido:** boton para generar el pedido como
+   PDF o texto y enviarlo al proveedor por WhatsApp
+   o email, sin salir del sistema.
+5. **Guardar pedido:** se guarda con estado "Pendiente"
    y queda en la pestaña de pendientes.
 
 ### 8.2 Generacion automatica de pedidos
@@ -791,7 +796,24 @@ Boton "Generar automatico" que analiza el stock:
   otros, o cambiar el proveedor de un producto.
 - Al confirmar, se guarda como pedido "Pendiente".
 
-### 8.3 Pedidos pendientes
+### 8.3 Stock critico
+
+Pestaña que muestra productos que necesitan reposicion:
+
+- **Productos sin stock (stock 0):** resaltados en
+  rojo, ordenados por cantidad de ventas (los mas
+  vendidos primero, ya que son los mas urgentes).
+- **Productos bajo stock minimo:** resaltados en
+  amarillo, ordenados por proximidad a cero.
+- Para cada producto se muestra: nombre, stock actual,
+  stock minimo, ventas ultimos 30 dias, proveedor
+  mas barato y su precio.
+- **Accion rapida:** boton "Agregar a pedido" que
+  agrega el producto directamente a un pedido nuevo
+  o existente (en borrador).
+- Filtros por categoria, subcategoria, empresa, marca.
+
+### 8.4 Pedidos pendientes
 
 Lista de pedidos que fueron enviados al proveedor
 pero aun no llegaron:
@@ -802,7 +824,7 @@ pero aun no llegaron:
   completo: productos, cantidades pedidas, precios
   estimados.
 
-### 8.4 Recepcion de pedido
+### 8.5 Recepcion de pedido
 
 Cuando el pedido llega, se selecciona de la lista de
 pendientes y se presiona "Registrar recepcion":
@@ -834,24 +856,39 @@ pendientes y se presiona "Registrar recepcion":
    - Se registra en el historial de precios.
    - El pedido pasa a estado "Recibido" y se mueve
      al historial.
-   - Si faltaron productos, se puede opcionalmente
-     generar un nuevo pedido con lo faltante.
    - El pedido guarda tanto la informacion original
      (lo que se pidio) como la recepcion (lo que
      realmente llego).
 
-### 8.5 Historial de pedidos
+**Recepcion parcial:**
+
+- Si el proveedor envia parte del pedido hoy y el
+  resto despues, se puede registrar una recepcion
+  parcial.
+- Al registrar, solo se completan los productos que
+  llegaron. Los que no llegaron quedan pendientes.
+- El pedido pasa a estado "Recibido parcial" y sigue
+  apareciendo en pendientes.
+- Se pueden registrar multiples recepciones parciales
+  hasta completar todo el pedido.
+- Cada recepcion parcial actualiza el stock de los
+  productos recibidos en ese momento.
+- Al recibir todo, el pedido pasa a "Recibido" y se
+  mueve al historial.
+
+### 8.6 Historial de pedidos
 
 - Lista de todos los pedidos con fecha, proveedor,
   total estimado, total real, estado.
-- Estados: pendiente, recibido, cancelado.
+- Estados: pendiente, recibido parcial, recibido,
+  cancelado.
 - Al ver el detalle de un pedido recibido se muestra
   la comparativa lado a lado: pedido vs recepcion
   (cantidades y precios estimados vs reales).
 - Filtros por proveedor, por rango de fechas, por
   estado.
 
-### 8.6 Comparativa de proveedores
+### 8.7 Comparativa de proveedores
 
 - Vista general donde se ven todos los productos con
   sus proveedores y precios.
@@ -1181,7 +1218,8 @@ Precios_Proveedor
 Pedidos
 ├── Id
 ├── Id_Proveedor (FK)
-├── Estado (pendiente, recibido, cancelado)
+├── Estado (pendiente, recibido_parcial, recibido,
+│   cancelado)
 ├── Total_Estimado
 ├── Total_Real (nullable, al recibir)
 ├── Notas
@@ -1742,12 +1780,15 @@ GET    /api/proveedores/{id}/pagos
 ### 13.20 Pedidos
 
 ```
+POST   /api/pedidos
 POST   /api/pedidos/generar
 GET    /api/pedidos
 GET    /api/pedidos/{id}
 PUT    /api/pedidos/{id}
-POST   /api/pedidos/{id}/confirmar
-PUT    /api/pedidos/{id}/estado
+POST   /api/pedidos/{id}/recepcion
+POST   /api/pedidos/{id}/enviar-proveedor
+PUT    /api/pedidos/{id}/cancelar
+GET    /api/pedidos/stock-critico
 GET    /api/pedidos/comparativa-proveedores
 ```
 
