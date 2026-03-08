@@ -1071,51 +1071,116 @@ pendientes y se presiona "Registrar recepcion":
 
 ### 9.1 Apertura de caja
 
-- Boton "Abrir caja" con campo de monto inicial en
-  efectivo.
+Al abrir la caja se registran los saldos iniciales
+de todos los medios de pago:
+
+- **Efectivo:** se puede ingresar de dos formas:
+  - **Por billetes:** el sistema muestra una grilla
+    con las denominaciones de billetes y monedas.
+    Se ingresa la cantidad de cada uno y el sistema
+    calcula el total automaticamente.
+  - **Manual:** se ingresa el monto total directo.
+- **Cuentas de transferencia:** por cada cuenta
+  configurada (ej: 4 cuentas de Mercado Pago) se
+  ingresa el saldo actual de esa cuenta.
+- **Terminales de pago (posnet):** por cada terminal
+  configurada se puede registrar si tiene saldo
+  pendiente de liquidacion.
 - Registra quien abrio la caja y a que hora.
 - Solo se puede vender con la caja abierta.
 
 ### 9.2 Durante la jornada
 
-- Todas las ventas en efectivo se suman a la caja.
-- Se pueden registrar egresos manuales (ej: pago a
-  proveedor en efectivo, retiro de efectivo).
-- Se pueden registrar ingresos manuales (ej: prestamo).
+- Todas las ventas se asignan automaticamente al
+  medio de pago correspondiente:
+  - Venta en efectivo → suma a efectivo en caja.
+  - Venta por transferencia → suma a la cuenta
+    de transferencia que se selecciono.
+  - Venta con tarjeta → suma a la terminal usada.
+- **Ingresos manuales:** se registran indicando el
+  medio (efectivo, cuenta, etc.) y el motivo
+  (ej: prestamo, deposito recibido).
+- **Egresos manuales:** se registran indicando el
+  medio y el motivo (ej: pago a proveedor, retiro
+  de efectivo, transferencia saliente).
+- **Movimientos entre medios:** transferir dinero
+  de un medio a otro (ej: depositar efectivo en
+  una cuenta de Mercado Pago). Se registra como
+  egreso de un medio e ingreso en otro.
+- Cada movimiento queda registrado con fecha, hora,
+  usuario, medio, tipo, monto y motivo.
 
 ### 9.3 Apertura y cierre automatico
 
-- Se puede configurar un horario de apertura automatica
-  de caja (ej: todos los dias a las 8:00). El sistema
-  abre la caja con el monto inicial configurado.
-- Se puede configurar un horario de cierre automatico
-  (ej: todos los dias a las 21:00). El sistema cierra
-  la caja y registra el monto esperado. El arqueo
-  queda pendiente para que el usuario lo complete.
+- Se puede configurar un horario de apertura
+  automatica de caja (ej: todos los dias a las
+  8:00). El sistema abre la caja con los saldos
+  del cierre anterior como saldos iniciales.
+- Se puede configurar un horario de cierre
+  automatico (ej: todos los dias a las 21:00).
+  El sistema cierra la caja y registra los montos
+  esperados. El arqueo queda pendiente para que el
+  usuario lo complete.
 - Si la caja ya esta abierta/cerrada al momento del
-  horario automatico, no se duplica la accion.
+  horario, no se duplica la accion.
 - Los horarios se configuran en el panel de
-  configuracion.
+  configuracion (seccion 11.9).
 
 ### 9.4 Cierre de caja
 
-- Boton "Cerrar caja."
-- Se muestra:
-  - Monto inicial.
-  - Total de ventas en efectivo.
-  - Ingresos manuales.
-  - Egresos manuales.
-  - **Monto esperado en caja.**
-  - Campo "monto real contado" para el arqueo.
-  - **Diferencia** (sobrante o faltante).
-- Se guarda el cierre con todos los datos y la
-  diferencia.
+Al cerrar la caja se hace el arqueo por cada medio
+de pago:
+
+**Efectivo:**
+
+- El sistema muestra el **monto esperado** (saldo
+  inicial + ingresos - egresos del dia).
+- El usuario ingresa el monto real contado, con las
+  mismas dos opciones de la apertura:
+  - **Por billetes:** grilla de denominaciones con
+    cantidad, calcula el total.
+  - **Manual:** monto total directo.
+- Se calcula la **diferencia** (sobrante o faltante).
+
+**Cuentas de transferencia:**
+
+- Por cada cuenta configurada se muestra:
+  - Saldo inicial (registrado en la apertura).
+  - Ingresos del dia (transferencias recibidas).
+  - Egresos del dia (transferencias salientes).
+  - **Saldo esperado** (calculado).
+  - Campo para ingresar el **saldo real** actual
+    de la cuenta.
+  - **Diferencia.**
+
+**Terminales de pago:**
+
+- Por cada terminal se muestra:
+  - Total cobrado con esa terminal en el dia.
+  - Desglose por tipo de tarjeta si se desea.
+
+**Resumen general:**
+
+- Cuadro resumen con todos los medios, mostrando
+  por cada uno: saldo inicial, movimientos del dia,
+  saldo esperado, saldo real, diferencia.
+- **Total general esperado vs total general real.**
+- Campo de observaciones (texto libre para notas
+  del cierre).
+- Se guarda el cierre con todos los datos.
 
 ### 9.5 Historial de cajas
 
-- Lista de todas las cajas con: fecha, usuario, monto
-  inicial, monto final, diferencia.
-- Detalle de cada caja con todos los movimientos.
+- Lista de todas las cajas con: fecha, usuario,
+  monto inicial total, monto final total,
+  diferencia total.
+- Al entrar al detalle de una caja se ven:
+  - Todos los movimientos del dia (ventas, ingresos,
+    egresos, transferencias entre medios).
+  - Desglose por medio de pago (efectivo, cada
+    cuenta, cada terminal).
+  - Los saldos iniciales y finales por medio.
+  - Las diferencias por medio.
 
 ---
 
@@ -1640,23 +1705,42 @@ Cajas
 ├── Id
 ├── Fecha_Apertura
 ├── Fecha_Cierre (nullable)
-├── Monto_Inicial
-├── Monto_Esperado (nullable)
-├── Monto_Real (nullable)
-├── Diferencia (nullable)
 ├── Estado (abierta, cerrada)
+├── Observaciones_Cierre (nullable, texto libre)
 ├── Id_Usuario_Apertura (FK)
 ├── Id_Usuario_Cierre (FK, nullable)
+├── Fecha_Creacion
+└── Fecha_Actualizacion
+
+Saldos_Caja
+├── Id
+├── Id_Caja (FK)
+├── Tipo_Medio (efectivo, cuenta_transferencia,
+│   terminal)
+├── Id_Medio (nullable, FK a Cuentas_Transferencia
+│   o Terminales segun Tipo_Medio)
+├── Saldo_Inicial
+├── Saldo_Esperado (nullable, calculado al cierre)
+├── Saldo_Real (nullable, ingresado al cierre)
+├── Diferencia (nullable)
+├── Detalle_Billetes_Apertura (JSON, nullable)
+├── Detalle_Billetes_Cierre (JSON, nullable)
 ├── Fecha_Creacion
 └── Fecha_Actualizacion
 
 Movimientos_Caja
 ├── Id
 ├── Id_Caja (FK)
-├── Tipo (ingreso, egreso)
-├── Motivo (venta, retiro, ingreso_manual, pago_proveedor)
+├── Tipo (ingreso, egreso, transferencia_entre_medios)
+├── Motivo (venta, retiro, ingreso_manual,
+│   pago_proveedor, deposito, transferencia)
 ├── Monto
 ├── Descripcion
+├── Tipo_Medio (efectivo, cuenta_transferencia,
+│   terminal)
+├── Id_Medio (nullable, FK segun Tipo_Medio)
+├── Id_Medio_Destino (nullable, para transferencias
+│   entre medios)
 ├── Id_Venta (FK, nullable)
 ├── Id_Usuario (FK)
 ├── Fecha_Creacion
