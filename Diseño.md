@@ -32,6 +32,14 @@ de navegacion lateral:
 
 ## 3. Panel de ventas (POS)
 
+El panel de ventas tiene dos pestañas principales:
+
+- **POS** (por defecto): punto de venta para crear
+  ventas nuevas.
+- **Historial:** listado de ventas anteriores con
+  busqueda, filtros y acceso rapido a editar,
+  devolver o reimprimir ticket.
+
 ### 3.1 Layout
 
 Pantalla dividida en dos secciones:
@@ -315,6 +323,29 @@ Accesible desde el historial de ventas o desde un boton
   cantidad en el carrito.
 - Si el codigo no existe, se muestra un aviso y se
   ofrece crear el producto con ese codigo.
+
+### 3.17 Historial de ventas
+
+Pestaña "Historial" dentro del panel de ventas:
+
+- **Tabla con columnas:** numero de venta, fecha/hora,
+  cliente (o "Consumidor final"), cantidad de items,
+  total, metodo de pago, estado, usuario que vendio.
+- **Buscador:** por numero de venta, nombre de cliente
+  o producto incluido en la venta.
+- **Filtros:** por rango de fechas, por vendedor, por
+  metodo de pago, por estado (completada, anulada,
+  editada).
+- **Ordenamiento:** por fecha (mas recientes primero
+  por defecto), por monto, por cliente.
+- **Acciones rapidas por venta:**
+  - Ver detalle completo (modal o vista expandida).
+  - Editar venta (abre el flujo de seccion 3.13).
+  - Devolucion / cambio (abre el flujo de 3.14).
+  - Reimprimir ticket / enviar PDF.
+  - Anular venta (con confirmacion).
+- **Paginacion** con cantidad de resultados por pagina
+  configurable.
 
 ---
 
