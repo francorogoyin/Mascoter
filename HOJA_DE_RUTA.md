@@ -187,6 +187,7 @@ Facturacion electronica automatica.
 Fase 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 Cada fase se completa antes de iniciar la siguiente.
+Dentro de cada fase, primero backend, luego frontend.
 Dentro de cada fase, primero se desarrolla el backend
 y luego el frontend correspondiente.
 
